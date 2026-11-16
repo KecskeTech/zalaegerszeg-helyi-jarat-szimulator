@@ -1,0 +1,165 @@
+total nodes: 285, unique names: 164
+Alibánfa, bejárati út | 46.88956,16.91554 | x3
+Alsóerdő | 46.81834,16.82599 | x2
+Alsónemesapáti, bejárati út | 46.84753,16.91878 | x2
+Andráshida, Andráshida utca 16. | 46.86135,16.79803 | x1
+Andráshida, Apátfa alsó | 46.86319,16.78790 | x1
+Andráshida, Apátfa központ | 46.86796,16.78368 | x1
+Andráshida, Berek utca | 46.86671,16.80359 | x1
+Andráshida, bolt | 46.86241,16.80035 | x2
+Andráshida, Gébárti út (tó) | 46.86217,16.80637 | x2
+Andráshida, iskola | 46.86454,16.79784 | x1
+Andráshida, Körmendi út | 46.86087,16.80102 | x1
+Andráshida, Kutasi utca 25. | 46.86620,16.80069 | x1
+Andráshida, Novák Mihály utca | 46.86831,16.79510 | x1
+Andráshida, repülőtér | 46.88222,16.79350 | x2
+Andráshida, sportpálya | 46.86556,16.79459 | x1
+Andráshida, Szent István utca | 46.86762,16.79450 | x1
+Andráshida, Szentmártoni út | 46.86588,16.80714 | x1
+Andráshida, temető | 46.86521,16.78978 | x2
+Aranyoslapi forrás | 46.80765,16.82547 | x2
+Baross liget | 46.83633,16.84772 | x1
+Bartók Béla utca - Zrínyi utca | 46.82859,16.84784 | x2
+Bartók Béla utca 30. | 46.82763,16.84418 | x2
+Bartók Béla utca 52. | 46.82525,16.84275 | x2
+Bartók Béla utca 84. | 46.82235,16.84378 | x2
+Báthory utca - Wlassics utca | 46.83998,16.85379 | x2
+Bazita elágazó I. | 46.83217,16.82791 | x2
+Bazita elágazó I/B | 46.83247,16.82765 | x2
+Bazita, Bazitai út 122. | 46.81169,16.80993 | x2
+Bazita, Bazitai út 5. | 46.80113,16.80347 | x2
+Bazita, Bazitai út 77. | 46.80805,16.80751 | x2
+Bazita, TV-torony | 46.81471,16.81181 | x2
+Becsali út 59. | 46.82549,16.82186 | x2
+Becsali út, Borsos-kút | 46.82131,16.81747 | x2
+Bekeháza major | 46.87996,16.80279 | x2
+Berzsenyi utca 15. | 46.84398,16.85180 | x2
+Botfa, autóbusz-forduló | 46.80168,16.87304 | x2
+Botfa, Botfa utca - Rózsás utca | 46.80151,16.87700 | x2
+Botfa, Speciális Fiúnevelő Intézet | 46.80063,16.85373 | x2
+Bozsoki autóbusz-forduló | 46.83523,16.87952 | x1
+Csácsbozsok elágazó | 46.84187,16.87719 | x3
+Csácsbozsok, Csácsi utca | 46.84595,16.87811 | x1
+Csácsbozsok, Damjanich utca | 46.84947,16.88017 | x1
+Csácsbozsok, Nyerges utca 17. | 46.84556,16.87991 | x1
+Ebergény, Nagycsarit utca 2. | 46.83149,16.80397 | x2
+Ebergény, tűzoltószertár | 46.82854,16.80093 | x1
+Egerszeghegy, Ezüstfenyő | 46.83480,16.81619 | x2
+Egerszeghegy, Gógánforduló | 46.83526,16.80944 | x2
+Egerszeghegy, közkút | 46.83450,16.81325 | x2
+Egerszeghegy, Panoráma panzió | 46.83262,16.81484 | x2
+Eötvös József Általános Iskola | 46.82655,16.83227 | x2
+Éva presszó | 46.83699,16.84188 | x1
+Fiú diákotthon | 46.83867,16.82951 | x2
+Flex A | 46.81511,16.84765 | x2
+Flex B | 46.80230,16.85007 | x2
+Gálafej | 46.80158,16.82697 | x2
+Ganz Ábrahám Szakközépiskola | 46.84098,16.82728 | x2
+GARTNER Kft. | 46.86239,16.85556 | x2
+Gasparich utca - Landorhegyi út | 46.83805,16.82364 | x2
+Gasparich utca 16. | 46.84412,16.83124 | x1
+Göcsej áruház | 46.83684,16.82919 | x1
+Göcseji úti ABC | 46.83641,16.83247 | x1
+Gyógyszertár, Kossuth út | 46.83983,16.84568 | x1
+Hatház, forduló | 46.88645,16.79343 | x1
+Hegyalja utca - Pálóczi utca buszmegálló | 46.82620,16.83701 | x1
+Hegyalja utca - Sas utca | 46.82937,16.83872 | x1
+Hegyalja utca 42. | 46.82479,16.83424 | x1
+Hidegmajor | 46.88955,16.80090 | x1
+Hock János utca (Bíbor utca) | 46.85321,16.81145 | x2
+Hunyadi út | 46.83750,16.84794 | x1
+Hűtőipari Zrt. | 46.85370,16.79893 | x2
+Inkubátorház (Pernix Pharma) | 46.87916,16.83179 | x1
+Kaszaháza | 46.85310,16.84525 | x2
+Kazinczy tér | 46.84529,16.84472 | x2
+Kertváros bejárati út | 46.82181,16.82858 | x2
+Kertváros, Átalszegett utca 14. | 46.83392,16.83418 | x1
+Kertváros, Átalszegett utca 19. | 46.83400,16.83394 | x1
+Kertváros, Erdész utca 16. | 46.83255,16.83146 | x1
+Kertváros, Erdész utca 21. | 46.83225,16.83111 | x1
+Kertváros, Erdész utca 50. | 46.83004,16.83069 | x1
+Kertváros, Erdész utca 53. | 46.82934,16.83058 | x1
+Kertváros, Liszt Ferenc Általános Iskola | 46.83224,16.83823 | x2
+Kertváros, Szent Család óvoda | 46.83470,16.84013 | x2
+Kertvárosi ABC | 46.82839,16.83402 | x1
+Kertvárosi forduló H | 46.82400,16.82955 | x1
+Kiskondás étterem | 46.85061,16.81859 | x2
+Kórház, Göcseji út | 46.83695,16.84456 | x1
+Kovács Károly tér | 46.84450,16.84758 | x1
+Kovács Károly tér - Mozi köz | 46.84419,16.84744 | x1
+Landorhegyi ABC | 46.84098,16.83169 | x2
+Landorhegyi út 20. | 46.83592,16.82875 | x1
+Landorhegyi út 34. | 46.83560,16.82536 | x1
+Malom utca | 46.84844,16.82459 | x1
+Malom utca (Zala Bútor) | 46.84947,16.82208 | x1
+Mártírok útja (Ady iskola) | 46.84199,16.84216 | x2
+Mindszentyneum | 46.84697,16.84653 | x1
+Nekeresd | 46.86379,16.85260 | x2
+Nemeshetés, autóbusz-forduló | 46.80028,16.91241 | x1
+Nemeshetés, Kossuth utca 24. | 46.80235,16.91463 | x2
+Neszele, autóbusz-forduló | 46.85713,16.83059 | x1
+Ola utca - Platán sor | 46.84738,16.82824 | x1
+Ola, temető | 46.84801,16.82629 | x1
+Olai bisztró | 46.84678,16.82826 | x2
+Olai templom (Interspar) | 46.84665,16.83370 | x2
+Önkiszolgáló étterem | 46.84073,16.84784 | x1
+Páterdomb, Baross Gábor utca 21. | 46.83782,16.85483 | x1
+Páterdomb, Baross Gábor utca 59. | 46.83222,16.85460 | x1
+Páterdomb, Kinizsi utca 78. | 46.83267,16.85197 | x1
+Páterdomb, Szegfű utca | 46.83555,16.85313 | x1
+Pethőhenye, Csortánkereszt | 46.87836,16.90515 | x2
+Pethőhenye, Dózsa utca 1. | 46.87789,16.91059 | x2
+Pethőhenye, faluház | 46.87693,16.91764 | x2
+Petőfi Sándor Általános Iskola | 46.83998,16.84769 | x1
+Platán sor - Gasparich utca | 46.84409,16.83072 | x2
+Pózva autóbusz-forduló | 46.87357,16.86882 | x1
+Pózva, Külsőkórház | 46.87336,16.85850 | x1
+Praktiker | 46.84360,16.86763 | x2
+Ságod, iskola | 46.87441,16.82365 | x2
+Ságod, Termál lakópark | 46.86628,16.82755 | x1
+Ságod, Termálfürdő (AquaCity) | 46.86535,16.82317 | x1
+Ságod, tűzoltószertár | 46.87057,16.82447 | x2
+Ságod, Új utca 14. | 46.87769,16.82222 | x1
+Ságod, Új utca 2. | 46.87806,16.82483 | x1
+Ságodi ipartelep | 46.86544,16.83269 | x2
+Széchenyi tér | 46.84469,16.84601 | x1
+Szenterzsébethegy elágazás | 46.84420,16.79438 | x2
+Szenterzsébethegy, Erzsébethegyi út 32. | 46.83804,16.78623 | x2
+Szenterzsébethegy, kút | 46.83977,16.79515 | x2
+Szenterzsébethegy, Molnárház | 46.84218,16.78828 | x2
+Szenterzsébethegy, Öreghegy | 46.83475,16.78422 | x1
+Szenterzsébethegy, Újhegy | 46.83550,16.79272 | x1
+Temető, Göcseji út | 46.83757,16.83641 | x2
+Tesco | 46.84485,16.85976 | x2
+Teskánd, kávási elágazás [7] | 46.85559,16.78111 | x3
+Tungsram (GE Hungary) | 46.82966,16.82793 | x2
+TÜZÉP | 46.82673,16.84786 | x2
+Új köztemető | 46.85981,16.84656 | x2
+Új köztemető, bejárati út | 46.85991,16.85098 | x2
+Új köztemető, bejárati út II. | 46.85770,16.84374 | x2
+Városi fürdő (Göcseji út) | 46.83720,16.84172 | x1
+Városi fürdő (Mártírok útja) | 46.83750,16.84076 | x1
+Vasútállomás | 46.83321,16.84759 | x1
+Vasútállomás (ABC) | 46.83252,16.84739 | x1
+Vasútállomás (Kisposta) | 46.83439,16.84750 | x1
+Vorhota | 46.84793,16.79764 | x2
+Zalabesenyő elágazó | 46.80798,16.85070 | x3
+Zalabesenyő, bolt | 46.80939,16.85733 | x1
+Zalabesenyő, Esze - Cseresnyésszeri | 46.81345,16.85569 | x1
+Zalabesenyő, Esze - Csörge utca | 46.81121,16.85575 | x1
+Zalabesenyő, Esze utca - Besenyő utca | 46.81555,16.85604 | x1
+Zalabesenyő, iskola | 46.81277,16.85748 | x1
+ZALACO Zrt. | 46.85587,16.84839 | x2
+Zalaegerszeg (Andráshida), Apátfa | 46.87021,16.78287 | x2
+Zalaegerszeg, autóbusz-állomás | 46.84504,16.84922 | x24
+Zalaegerszeg, Csácsi arborétum | 46.83743,16.89338 | x2
+Zalaegerszeg, Cserlap | 46.84136,16.90148 | x2
+Zalaegerszeg, Csertán Sándor utca | 46.83432,16.82819 | x3
+Zalaegerszeg, MOL Nyrt. bejárati út | 46.82367,16.84756 | x2
+Zalaegerszeg, Pózva, Külsőkórház, bejárati út | 46.86913,16.86369 | x2
+Zalaegerszeg, teskándi elágazás | 46.85684,16.80173 | x3
+Zalaegerszeg, Városmajor | 46.87682,16.85318 | x2
+Zalaegerszeg, Volán-telep (Zrínyi utca) | 46.81892,16.84715 | x2
+Zalaszentiván, Zrínyi utca 4. | 46.88933,16.90191 | x2
+Zalavíz Zrt. | 46.84423,16.86390 | x2
+Zrínyi Gimnázium | 46.84611,16.83874 | x2

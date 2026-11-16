@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zalaegerszeg helyi járat szimulátor</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f0b429'/%3E%3Ctext x='32' y='45' font-size='34' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23171207'%3E20%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="app"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="topbar">
+      <div class="route-chip">
+        <span id="route-ref" class="ref">20</span>
+        <div class="route-meta">
+          <div id="route-name">Belvárosi körjárat</div>
+          <div id="route-sub">Zalaegerszeg helyi járat</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="btn-view" class="btn"><span class="key">C</span> 3. személy</button>
+        <button id="btn-auto" class="btn"><span class="key">G</span> Autopilot: KI</button>
+        <button id="btn-sound" class="btn"><span class="key">H</span> Hang: BE</button>
+        <button id="btn-help" class="btn">Súgó</button>
+      </div>
+    </div>
+
+    <div id="announce" class="announce"></div>
+
+    <div id="stop-panel">
+      <div class="label">Következő megálló</div>
+      <div id="next-stop-name">—</div>
+      <div class="stop-row"><span id="next-stop-dist">0 m</span><span id="stop-index">1 / 8</span></div>
+      <div class="progress"><div id="progress-fill"></div></div>
+      <div id="route-progress-text">0,0 / 0,0 km</div>
+      <div class="pax-row"><span>Utasok a buszon</span><b id="passenger-count">0</b></div>
+    </div>
+
+    <div id="gps">
+      <div class="gps-head"><span class="dot"></span> GPS · Zalaegerszeg</div>
+      <div class="gps-wrap">
+        <canvas id="gps-canvas"></canvas>
+        <div class="gps-overlay">
+          <div class="speed"><span id="speed-value">0</span><small>km/h</small></div>
+          <div id="gear" class="gear">D</div>
+        </div>
+      </div>
+      <div id="street-name" class="street">—</div>
+      <div id="gps-stop" class="gps-stop">—</div>
+    </div>
+
+    <div id="light-indicator" class="light hidden">
+      <span class="lamp"></span><span id="light-text">PIROS – állj meg</span>
+    </div>
+
+    <div id="controls-hint">
+      <span><b>W</b>/<b>S</b> gáz – fék</span>
+      <span><b>A</b>/<b>D</b> kormány</span>
+      <span><b>Szóköz</b> rögzítőfék</span>
+      <span><b>R</b> újraindítás</span>
+    </div>
+  </div>
+
+  <aside id="help" class="help hidden">
+    <h2>Irrányítás</h2>
+    <ul>
+      <li><b>W</b> / <b>↑</b> – gáz</li>
+      <li><b>S</b> / <b>↓</b> – fék, majd hátramenet</li>
+      <li><b>A</b> <b>D</b> / <b>←</b> <b>→</b> – kormányzás</li>
+      <li><b>Szóköz</b> – rögzítőfék</li>
+      <li><b>C</b> – első / harmadik személyű nézet</li>
+      <li><b>G</b> – autopilot be/ki</li>
+      <li><b>H</b> – hangos megállóbejelentés be/ki</li>
+      <li><b>R</b> – busz visszaállítása az útvonal elejére</li>
+      <li><b>Egérhúzás</b> – kamera forgatása (3. személy)</li>
+    </ul>
+    <h2>Megállók</h2>
+    <p>Állj meg a megálló közelében (10 m-en belül) 5 km/h alatti sebességgel – az ajtók kinyílnak, és a járat továbbindul.</p>
+    <h2>Jelzőlámpák</h2>
+    <p>A lámpa minden kereszteződés előtt piros. Állj meg a stopvonalnál: rövid várakozás után zöldre vált.</p>
+    <p class="small">A város valós OpenStreetMap adatokból épül fel. A busz saját, eredeti alacsonypadlós elektromos buszmodell, a zalaegerszegi BYD járművek ihletésével.</p>
+  </aside>
+
+  <div id="screen-start" class="screen">
+    <div class="start-inner">
+      <header>
+        <div class="kicker">Zalaegerszeg · helyi közlekedés</div>
+        <h1>Helyi járat<br /><span>szimulátor</span></h1>
+        <p class="lead">
+          Valós belvárosi buszjáratok és megállók Zalaegerszegen. Válassz járatot,
+          ülj be az elektromos busz vezetőülésébe, és vidd végig az útvonalat.
+        </p>
+        <div class="badges">
+          <span>OpenStreetMap alapú város</span>
+          <span>11 belvárosi járat</span>
+          <span>164 valós megálló</span>
+          <span>BYD-ihlette e-busz</span>
+        </div>
+      </header>
+      <div id="route-list" class="route-list"></div>
+      <footer class="start-footer">
+        <p>
+          A járatok a MÁV-csoport / Volánbusz zalaegerszegi helyi menetrendje
+          (2026. szeptember 1.) szerinti útvonalakat követik. A Botfa és
+          Kökényesmindszent irányú járatok egyelőre nem részei a szimulátornak.
+        </p>
+        <p class="small">
+          A 3D modell, a livery és a busz elnevezése eredeti, nem tartalmaz
+          védjegyet vagy másolható gyári arculatot.
+        </p>
+      </footer>
+    </div>
+  </div>
+
+  <div id="screen-complete" class="screen hidden">
+    <div class="complete-card">
+      <div class="kicker">Végállomás</div>
+      <h2>Végigvitted a járatot</h2>
+      <div id="complete-stats" class="stats"></div>
+      <div class="complete-actions">
+        <button id="btn-again" class="btn primary">Újraindítás</button>
+        <button id="btn-other" class="btn">Másik járat</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
+

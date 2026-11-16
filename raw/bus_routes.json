@@ -1,0 +1,159 @@
+﻿{
+    "version":  0.6,
+    "generator":  "Overpass API 0.7.62.11 87bfad18",
+    "osm3s":  {
+                  "timestamp_osm_base":  "2026-11-16T18:54:34Z",
+                  "copyright":  "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+              },
+    "elements":  [
+                     {
+                         "type":  "relation",
+                         "id":  338501,
+                         "tags":  {
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "public_transport:version":  "2",
+                                      "ref":  "10",
+                                      "roundtrip":  "yes",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  338535,
+                         "tags":  {
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "ref":  "11",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  338536,
+                         "tags":  {
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "ref":  "10C",
+                                      "reference":  "10C",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  357147,
+                         "tags":  {
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "ref":  "10Y",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  6704116,
+                         "tags":  {
+                                      "from":  "SÃ¡rvÃ¡r, autÃ³busz-Ã¡llomÃ¡s",
+                                      "name":  "1670 =\u003e Zalaegerszeg",
+                                      "network":  "VolÃ¡nbusz",
+                                      "network:wikidata":  "Q746503",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "public_transport:version":  "2",
+                                      "ref":  "1670",
+                                      "route":  "bus",
+                                      "to":  "Zalaegerszeg, autÃ³busz-Ã¡llomÃ¡s",
+                                      "type":  "route",
+                                      "via":  "HosszÃºpereszteg, autÃ³busz-vÃ¡rÃ³terem"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  16412949,
+                         "tags":  {
+                                      "name":  "4: Botfa â ZalabesenyÅ â VasÃºtÃ¡llomÃ¡s â KovÃ¡cs KÃ¡roly tÃ©r â AutÃ³busz-Ã¡llomÃ¡s",
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "public_transport:version":  "2",
+                                      "ref":  "4",
+                                      "roundtrip":  "no",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  16437141,
+                         "tags":  {
+                                      "name":  "4: AutÃ³busz-Ã¡llomÃ¡s â SzÃ©chenyi tÃ©r â VasÃºtÃ¡llomÃ¡s â ZalabesenyÅ â Botfa",
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "public_transport:version":  "2",
+                                      "ref":  "4",
+                                      "roundtrip":  "no",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  16449150,
+                         "tags":  {
+                                      "name":  "13: KertvÃ¡ros â VasÃºtÃ¡llomÃ¡s â KaszahÃ¡za â Nekeresd â PÃ³zva",
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "ref":  "13",
+                                      "route":  "bus",
+                                      "type":  "route"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  16492286,
+                         "tags":  {
+                                      "from":  "PÃ³zva",
+                                      "name":  "13: PÃ³zva â Nekeresd â KaszahÃ¡za â VasÃºtÃ¡llomÃ¡s â KertvÃ¡ros",
+                                      "network":  "local",
+                                      "operator":  "VolÃ¡nbusz",
+                                      "ref":  "13",
+                                      "route":  "bus",
+                                      "to":  "KertvÃ¡ros",
+                                      "type":  "route",
+                                      "via":  "Nekeresd;KaszahÃ¡za;VasÃºtÃ¡llomÃ¡s"
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  20166738,
+                         "tags":  {
+                                      "fee":  "yes",
+                                      "from":  "SzenterzsÃ©bethegy, Ãjhegy",
+                                      "name":  "Bus 6: SzenterzsÃ©bethegy =\u003e HÅ±tÅipari Zrt. =\u003e AutÃ³busz-Ã¡llomÃ¡s",
+                                      "public_transport:version":  "2",
+                                      "ref":  "6",
+                                      "route":  "bus",
+                                      "to":  "AutÃ³busz-Ã¡llomÃ¡s",
+                                      "type":  "route",
+                                      "via":  "HÅ±tÅipari Zrt."
+                                  }
+                     },
+                     {
+                         "type":  "relation",
+                         "id":  20166739,
+                         "tags":  {
+                                      "fee":  "yes",
+                                      "from":  "AutÃ³busz-Ã¡llomÃ¡s",
+                                      "name":  "Bus 6: AutÃ³busz-Ã¡llomÃ¡s =\u003e HÅ±tÅipari Zrt. =\u003e SzenterzsÃ©bethegy",
+                                      "public_transport:version":  "2",
+                                      "ref":  "6",
+                                      "route":  "bus",
+                                      "to":  "SzenterzsÃ©bethegy, Ãjhegy",
+                                      "type":  "route",
+                                      "via":  "HÅ±tÅipari Zrt."
+                                  }
+                     }
+                 ]
+}
