@@ -1,4 +1,4 @@
-import * as THREE from "three";
+﻿import * as THREE from "three";
 
 // Kátyúk az útvonalon: sötét foltok az aszfalton + rázkódás áthaladáskor.
 export class Potholes {
@@ -16,15 +16,15 @@ export class Potholes {
     };
 
     const geos = [
-      new THREE.CircleGeometry(0.55, 9),
-      new THREE.CircleGeometry(0.42, 8),
-      new THREE.CircleGeometry(0.68, 10),
+      new THREE.CircleGeometry(0.8, 10),
+      new THREE.CircleGeometry(0.62, 9),
+      new THREE.CircleGeometry(0.95, 11),
     ];
     geos.forEach((g) => g.rotateX(-Math.PI / 2));
     const mat = new THREE.MeshBasicMaterial({
       color: 0x191c1e,
       transparent: true,
-      opacity: 0.75,
+      opacity: 0.88,
       depthWrite: false,
     });
 
@@ -97,3 +97,4 @@ export class Potholes {
     this.items = [];
   }
 }
+

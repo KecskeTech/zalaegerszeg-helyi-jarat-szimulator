@@ -1,4 +1,4 @@
-# Zalaegerszeg helyi járat szimulátor
+﻿# Zalaegerszeg helyi járat szimulátor
 
 Böngészőben futó, 3D-s buszszimulátor Zalaegerszeg belvárosában. Valós
 buszmegállókkal, valós helyi járatútvonalakon, elektromos szólóbusszal,
@@ -34,6 +34,13 @@ Közvetlenül `index.html`-ként nem érdemes megnyitni: a böngészők a
 
 A járatot a kezdőképernyőn kártyára kattintva lehet kiválasztani.
 Közvetlen hivatkozás is használható: `http://127.0.0.1:8123/?route=20`.
+
+## Utasok, hangok, kátyúk
+
+- A megállókban utasok várakoznak; megálláskor beszállnak (az utastér ülései megtelnek), induláskor leszállók is vannak.
+- A busz hangja elektromos: halk gördülési zaj, magas inverter-sípolás, alacsony sebességnél AVAS-szerű figyelmeztető hang. 40 km/h felett utastér-zörgés/nyikorgás hallható.
+- Az útvonalon kátyúk vannak: áthaladva rázkódik a busz és tompa puffanás hallható.
+- Az épületeknek nem lehet nekimenni: ütközéskor a busz visszapattan, és a sebesség leesik.
 
 ## Megállók és jelzőlámpák
 
@@ -108,3 +115,4 @@ node tools/build-data.mjs
   fotórealisztikus modellek.
 - Nincs ütközésdetektálás: a busszal le lehet hajtani a járdára is.
 - A forgalom (többi autó, utasok) nem szimulált.
+

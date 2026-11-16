@@ -475,7 +475,11 @@ function updateHud(st, light) {
     ui.light.classList.remove("hidden");
     ui.light.classList.toggle("green", light.state === "green");
     ui.lightText.textContent =
-      light.state === "red" ? "PIROS – állj meg" : "ZÖLD – mehetsz";
+      light.state === "red"
+        ? "PIROS – állj meg"
+        : light.state === "yellow"
+          ? "SÁRGA – lassíts"
+          : "ZÖLD – mehetsz";
   } else {
     ui.light.classList.add("hidden");
   }
@@ -500,6 +504,7 @@ if (wanted) {
   const r = CITY.routes.find((x) => x.ref.toLowerCase() === wanted.toLowerCase());
   if (r) setTimeout(() => startRoute(r), 300);
 }
+
 
 
 
