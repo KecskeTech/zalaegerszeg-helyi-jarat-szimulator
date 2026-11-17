@@ -60,6 +60,24 @@ for (const e of stopsRaw.elements) {
   });
 }
 const stopsByName = new Map();
+// Az OSM-ben nem (vagy nem buszmegállóként) szereplő, de a menetrendben
+// létező megállók. A koordináták a Göcseji út / Landorhegyi út / Rózsa liget
+// úttengelyére lettek igazítva.
+const EXTRA_STOPS = [
+  { name: "Köztemető (Göcseji út)", lat: 46.837438, lon: 16.836033 },
+  { name: "Rózsa liget", lat: 46.839380, lon: 16.848998 },
+  { name: "Landorhegyi út 60.", lat: 46.837737, lon: 16.824548 },
+];
+for (const s of EXTRA_STOPS) {
+  stopNodes.push({
+    id: "extra-" + s.name,
+    name: s.name,
+    lat: s.lat,
+    lon: s.lon,
+    x: projX(s.lon),
+    z: projZ(s.lat),
+  });
+}
 for (const s of stopNodes) {
   if (!stopsByName.has(s.name)) stopsByName.set(s.name, []);
   stopsByName.get(s.name).push(s);
@@ -321,15 +339,24 @@ const ROUTE_DEFS = [
     ref: "20",
     name: "Belvárosi körjárat",
     color: "#e8b53a",
+    // A valós menetrend szerinti útvonal (Csertán Sándor utca ► Kovács
+    // Károly tér ► Gasparich utca ► Csertán Sándor utca), rövid szakaszokkal.
     stops: [
+      "Zalaegerszeg, Csertán Sándor utca",
+      "Köztemető (Göcseji út)",
+      "Éva presszó",
+      "Kórház, Göcseji út",
+      "Rózsa liget",
+      "Önkiszolgáló étterem",
       "Kovács Károly tér",
+      "Kazinczy tér",
+      "Zrínyi Gimnázium",
+      "Olai templom (Interspar)",
       "Gasparich utca 16.",
-      "Gasparich utca - Landorhegyi út",
+      "Ganz Ábrahám Szakközépiskola",
+      "Landorhegyi út 60.",
       "Landorhegyi út 34.",
-      "Landorhegyi út 20.",
-      "Landorhegyi ABC",
-      "Mártírok útja (Ady iskola)",
-      "Kovács Károly tér",
+      "Zalaegerszeg, Csertán Sándor utca",
     ],
   },
   {
@@ -723,6 +750,18 @@ const MANUAL_JUNCTIONS = [
   [46.84844, 16.82459], // Malom utca
 ];
 
+// Jelzőlámpák, amelyeket el kell távolítani a generált adatokból.
+// A vasútállomás előtti lámpa nem létezik a valóságban, ezért kikerül.
+const REMOVED_LIGHTS = [
+  { x: 14.3, z: 1293, r: 25 }, // Vasútállomás / Kisposta előtti csomópont
+];
+
+function removeUnwantedLights(route) {
+  route.lights = route.lights.filter(
+    (l) => !REMOVED_LIGHTS.some((e) => Math.hypot(l.x - e.x, l.z - e.z) < e.r)
+  );
+}
+
 function addManualJunctions(route) {
   const path = route.path;
   const cum = route.cum;
@@ -754,6 +793,7 @@ const routes = await buildRoutes(roadGraph);
 for (const r of routes) {
   r.lights = detectLights(r);
   addManualJunctions(r);
+  removeUnwantedLights(r);
   process.stdout.write(
     `  ${r.ref}: ${r.path.length} pont, ${r.length} m, ${r.lights.length} lámpa\n`
   );

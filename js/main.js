@@ -42,6 +42,10 @@ scene.add(bus);
 const cockpit = createCockpit();
 cockpit.visible = false;
 camera.add(cockpit);
+// Belső fény, hogy a műszerfal ne legyen koromfekete.
+const cockpitLight = new THREE.PointLight(0xfff1dc, 1.1, 4, 2);
+cockpitLight.position.set(0.35, -0.1, -1.1);
+camera.add(cockpitLight);
 
 const driver = new Driver(CITY);
 const minimap = new Minimap(document.getElementById("gps-canvas"), CITY);

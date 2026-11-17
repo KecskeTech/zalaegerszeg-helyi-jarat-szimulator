@@ -268,54 +268,164 @@ export function createBus() {
 
 export function createCockpit() {
   const g = new THREE.Group();
-  const dashMat = new THREE.MeshLambertMaterial({ color: 0x1a1f24 });
-  const darkMat = new THREE.MeshLambertMaterial({ color: 0x0b0e11 });
-  const trimMat = new THREE.MeshLambertMaterial({ color: 0x2b3237 });
+  const dashMat = new THREE.MeshLambertMaterial({ color: 0x2c343b });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x171c20 });
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0x424c54 });
+  const softMat = new THREE.MeshLambertMaterial({ color: 0x353d44 });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x22343d,
+    metalness: 0.3,
+    roughness: 0.15,
+    transparent: true,
+    opacity: 0.55,
+  });
+  const displayMat = new THREE.MeshStandardMaterial({
+    color: 0x03151a,
+    emissive: 0x0a3540,
+    emissiveIntensity: 0.55,
+  });
 
-  // műszerfal
-  const dash = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.55, 0.46), dashMat);
-  dash.position.set(0, -0.9, -2.0);
-  dash.rotation.x = 0.16;
+  // A kamerát a bal oldali vezetőülésre tesszük, ezért a műszerfal
+  // a kamera-local +x (bus jobb oldala) felé hosszabb.
+  const DASH_X = 0.62;
+
+  // padló / lábtér
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.08, 1.5), softMat);
+  floor.position.set(DASH_X, -1.14, -0.95);
+  g.add(floor);
+
+  // mennyezet és oldalfalak, hogy ne "lebegjen" a műszerfal
+  const ceiling = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.06, 2.0), softMat);
+  ceiling.position.set(DASH_X, 1.04, -1.05);
+  g.add(ceiling);
+  for (const sx of [-0.66, 1.92]) {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 1.7), dashMat);
+    wall.position.set(sx, -0.62, -1.05);
+    g.add(wall);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 1.7), trimMat);
+    rail.position.set(sx, -0.16, -1.05);
+    g.add(rail);
+  }
+
+  // szellőzők a műszerfal tetején
+  for (const sx of [0.36, 0.72]) {
+    const vent = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.09), darkMat);
+    vent.position.set(sx, -0.69, -1.44);
+    vent.rotation.x = 0.2;
+    g.add(vent);
+  }
+
+  // műszerfal: a kormány előtt/alatt, hogy ne lógjon bele
+  const dash = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.5, 0.5), dashMat);
+  dash.position.set(DASH_X, -0.98, -1.72);
+  dash.rotation.x = 0.1;
   g.add(dash);
 
-  const top = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.1, 0.62), trimMat);
-  top.position.set(0, -0.66, -2.08);
-  top.rotation.x = 0.34;
-  g.add(top);
+  const dashTop = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.08, 0.6), trimMat);
+  dashTop.position.set(DASH_X, -0.72, -1.72);
+  dashTop.rotation.x = 0.28;
+  g.add(dashTop);
 
-  // kormány
+  // oldalsó műszerfal-panelek
+  for (const sx of [-0.64, 1.9]) {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.8, 1.2), dashMat);
+    side.position.set(sx, -0.88, -1.35);
+    g.add(side);
+  }
+
+  // műszeregység a kormány mögött
+  const cluster = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.07), darkMat);
+  cluster.position.set(0, -0.64, -1.42);
+  cluster.rotation.x = -0.12;
+  g.add(cluster);
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.06, 0.18), dashMat);
+  hood.position.set(0, -0.78, -1.5);
+  hood.rotation.x = 0.18;
+  g.add(hood);
+
+  // két kerek műszer (sebesség / energia)
+  for (const sx of [-0.13, 0.13]) {
+    const dial = new THREE.Mesh(new THREE.CircleGeometry(0.062, 20), displayMat);
+    dial.position.set(sx, -0.64, -1.375);
+    dial.rotation.x = -0.12;
+    g.add(dial);
+  }
+
+  // központi kijelző
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.21, 0.03), displayMat);
+  screen.position.set(0.78, -0.68, -1.4);
+  screen.rotation.x = -0.18;
+  screen.rotation.y = -0.1;
+  g.add(screen);
+
+  // kapcsolók / gombok
+  for (let i = 0; i < 4; i++) {
+    const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.035, 8), trimMat);
+    btn.rotation.x = Math.PI / 2;
+    btn.position.set(-0.42 + i * 0.1, -0.72, -1.4);
+    g.add(btn);
+  }
+
+  // kormány: a műszerfal előtt, hogy ne metssze azt
   const wheel = new THREE.Group();
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.04, 10, 26), darkMat);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.032, 10, 28), darkMat);
   wheel.add(rim);
   for (let i = 0; i < 3; i++) {
-    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.03, 0.03), trimMat);
+    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.028, 0.028), trimMat);
     spoke.position.set(
-      Math.cos((i * 2 * Math.PI) / 3 + Math.PI / 2) * 0.13,
-      Math.sin((i * 2 * Math.PI) / 3 + Math.PI / 2) * 0.13,
+      Math.cos((i * 2 * Math.PI) / 3 + Math.PI / 2) * 0.12,
+      Math.sin((i * 2 * Math.PI) / 3 + Math.PI / 2) * 0.12,
       0
     );
     spoke.rotation.z = (i * 2 * Math.PI) / 3 + Math.PI / 2;
     wheel.add(spoke);
   }
-  const hubM = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.05, 14), trimMat);
-  hubM.rotation.x = Math.PI / 2;
-  wheel.add(hubM);
-  wheel.position.set(-0.52, -0.76, -1.86);
-  wheel.rotation.x = 0.55;
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.055, 14), trimMat);
+  hub.rotation.x = Math.PI / 2;
+  wheel.add(hub);
+  wheel.position.set(0, -0.5, -1.3);
+  wheel.rotation.x = -0.3;
   g.add(wheel);
 
-  // kijelző
-  const screen = new THREE.Mesh(
-    new THREE.BoxGeometry(0.46, 0.26, 0.02),
-    new THREE.MeshStandardMaterial({
-      color: 0x061016,
-      emissive: 0x0d4b5c,
-      emissiveIntensity: 0.85,
-    })
-  );
-  screen.position.set(0.24, -0.62, -1.9);
-  screen.rotation.x = 0.3;
-  g.add(screen);
+  // kormányoszlop
+  const column = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.3, 10), darkMat);
+  column.position.set(0, -0.64, -1.48);
+  column.rotation.x = Math.PI / 2 - 0.3;
+  g.add(column);
+
+  // szélvédő keret / A-oszlopok
+  for (const sx of [-0.66, 1.92]) {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.4, 0.1), dashMat);
+    pillar.position.set(sx, 0.22, -2.15);
+    pillar.rotation.z = sx > 0 ? 0.035 : -0.035;
+    g.add(pillar);
+  }
+  const header = new THREE.Mesh(new THREE.BoxGeometry(2.58, 0.08, 0.1), dashMat);
+  header.position.set(DASH_X, 0.96, -2.15);
+  g.add(header);
+
+  // oldalsó ajtókeretek
+  for (const sx of [-0.64, 1.9]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.45, 0.08), darkMat);
+    rail.position.set(sx, -0.1, -0.75);
+    g.add(rail);
+  }
+
+  // jobb oldali utaskapcsoló / jegykezelő konzol
+  const consoleBody = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.62, 0.28), dashMat);
+  consoleBody.position.set(1.2, -0.66, -1.05);
+  g.add(consoleBody);
+  const consoleScreen = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.02), displayMat);
+  consoleScreen.position.set(1.2, -0.52, -0.9);
+  g.add(consoleScreen);
+
+  // visszapillantó
+  const mirrorArm = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.2, 0.045), darkMat);
+  mirrorArm.position.set(DASH_X, 0.84, -2.2);
+  g.add(mirrorArm);
+  const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.11, 0.04), glassMat);
+  mirror.position.set(DASH_X, 0.73, -2.21);
+  g.add(mirror);
 
   g.userData.wheel = wheel;
   g.userData.screen = screen;

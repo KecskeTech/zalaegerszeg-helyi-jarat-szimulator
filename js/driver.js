@@ -1,6 +1,33 @@
 ﻿const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+function pointInPoly(x, z, p) {
+  let inside = false;
+  for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) {
+    const xi = p[i],
+      zi = p[i + 1],
+      xj = p[j],
+      zj = p[j + 1];
+    if (
+      zi > z !== zj > z &&
+      x < ((xj - xi) * (z - zi)) / (zj - zi) + xi
+    )
+      inside = !inside;
+  }
+  return inside;
+}
+
+function segmentDist2(px, pz, ax, az, bx, bz) {
+  const vx = bx - ax,
+    vz = bz - az;
+  const len2 = vx * vx + vz * vz || 1;
+  let t = ((px - ax) * vx + (pz - az) * vz) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const dx = px - (ax + vx * t),
+    dz = pz - (az + vz * t);
+  return dx * dx + dz * dz;
+}
+
 export class Driver {
   constructor(CITY) {
     this.CITY = CITY;
@@ -8,6 +35,7 @@ export class Driver {
     this.onEvent = () => {};
     this.buildStreetIndex(CITY);
     this.buildBuildingGrid(CITY);
+    this.buildGrassGrid(CITY);
     this.crashCooldown = 0;
   }
 
@@ -54,6 +82,9 @@ export class Driver {
         maxZ = Math.max(maxZ, b.p[i + 1]);
       }
       if (maxX - minX < 2.5 || maxZ - minZ < 2.5) continue;
+      // A pontos poligonokat tároljuk, nem a befoglaló téglalapot: az AABB
+      // ugyanis L alakú / ferde épületeknél láthatatlan falakat okozott.
+      const entry = { p: b.p, minX, minZ, maxX, maxZ };
       const x0 = Math.floor(minX / this.bCell),
         x1 = Math.floor(maxX / this.bCell);
       const z0 = Math.floor(minZ / this.bCell),
@@ -62,28 +93,74 @@ export class Driver {
         for (let cz = z0; cz <= z1; cz++) {
           const k = key(cx, cz);
           if (!this.bGrid.has(k)) this.bGrid.set(k, []);
-          this.bGrid.get(k).push([minX, minZ, maxX, maxZ]);
+          this.bGrid.get(k).push(entry);
         }
     }
   }
 
   hitsBuilding(x, z, m) {
+    const m2 = m * m;
     const cx = Math.floor(x / this.bCell);
     const cz = Math.floor(z / this.bCell);
     for (let gx = cx - 1; gx <= cx + 1; gx++)
       for (let gz = cz - 1; gz <= cz + 1; gz++) {
         const arr = this.bGrid.get(gx + "," + gz);
         if (!arr) continue;
-        for (const [minX, minZ, maxX, maxZ] of arr) {
+        for (const b of arr) {
           if (
-            x > minX - m &&
-            x < maxX + m &&
-            z > minZ - m &&
-            z < maxZ + m
+            x < b.minX - m ||
+            x > b.maxX + m ||
+            z < b.minZ - m ||
+            z > b.maxZ + m
           )
-            return true;
+            continue;
+          if (pointInPoly(x, z, b.p)) return true;
+          // Az épület szélétől mért távolság (a busz szélessége miatt).
+          const p = b.p;
+          for (let i = 0; i < p.length - 2; i += 2) {
+            if (segmentDist2(x, z, p[i], p[i + 1], p[i + 2], p[i + 3]) < m2)
+              return true;
+          }
         }
       }
+    return false;
+  }
+
+  buildGrassGrid(CITY) {
+    this.gCell = 60;
+    this.gGrid = new Map();
+    const key = (a, b) => a + "," + b;
+    for (const a of CITY.areas) {
+      if (a.k !== "park" && a.k !== "forest") continue;
+      let minX = Infinity,
+        maxX = -Infinity,
+        minZ = Infinity,
+        maxZ = -Infinity;
+      for (let i = 0; i < a.p.length; i += 2) {
+        minX = Math.min(minX, a.p[i]);
+        maxX = Math.max(maxX, a.p[i]);
+        minZ = Math.min(minZ, a.p[i + 1]);
+        maxZ = Math.max(maxZ, a.p[i + 1]);
+      }
+      const x0 = Math.floor(minX / this.gCell),
+        x1 = Math.floor(maxX / this.gCell);
+      const z0 = Math.floor(minZ / this.gCell),
+        z1 = Math.floor(maxZ / this.gCell);
+      for (let cx = x0; cx <= x1; cx++)
+        for (let cz = z0; cz <= z1; cz++) {
+          const k = key(cx, cz);
+          if (!this.gGrid.has(k)) this.gGrid.set(k, []);
+          this.gGrid.get(k).push(a.p);
+        }
+    }
+  }
+
+  onGrass(x, z) {
+    const cx = Math.floor(x / this.gCell);
+    const cz = Math.floor(z / this.gCell);
+    const arr = this.gGrid.get(cx + "," + cz);
+    if (!arr) return false;
+    for (const p of arr) if (pointInPoly(x, z, p)) return true;
     return false;
   }
 
@@ -231,7 +308,10 @@ export class Driver {
     // --- fizika ---
     const MAXF = 16.6,
       MAXR = -4.2;
-    const steerLim = Math.max(0.14, 0.44 - Math.abs(this.speed) * 0.021);
+    // Nagyobb tengelytáv + kisebb maximális kormányszög = nagyobb,
+    // buszhoz illő fordulási sugár (kb. 24 m álló helyzetből).
+    const WHEELBASE = 10.2;
+    const steerLim = Math.max(0.15, 0.4 - Math.abs(this.speed) * 0.019);
     const targetSteer = clamp(steerTarget, -1, 1) * steerLim;
     const maxRate = 0.85; // rad/s – ne legyen ideges a kormány
     this.steer += clamp(targetSteer - this.steer, -maxRate * dt, maxRate * dt);
@@ -251,9 +331,13 @@ export class Driver {
     if (this.speed > 0) this.speed = Math.max(0, this.speed - 0.35 * dt);
     if (this.speed < 0) this.speed = Math.min(0, this.speed + 0.35 * dt);
     this.speed = clamp(this.speed, MAXR, MAXF);
+    // Fű: csak lassít, nem ütközés.
+    if (this.onGrass(this.x, this.z)) {
+      this.speed *= Math.max(0, 1 - dt * 0.8);
+    }
     this.accel = (this.speed - prevSpeed) / dt;
 
-    const yawRate = (this.speed / 8.6) * Math.tan(this.steer);
+    const yawRate = (this.speed / WHEELBASE) * Math.tan(this.steer);
     this.heading = wrap(this.heading + yawRate * dt);
     const fx = Math.sin(this.heading),
       fz = Math.cos(this.heading);

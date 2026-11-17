@@ -450,6 +450,169 @@ function createTrees(scene, CITY) {
   scene.add(trunks, leaves);
 }
 
+function grassTuftGeometry() {
+  // Néhány összeérő, vékony fűszál-háromszög egy csomóban.
+  const pos = [];
+  let s = 97531;
+  const rnd = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  const blades = 8;
+  for (let i = 0; i < blades; i++) {
+    const a = (i / blades) * Math.PI * 2 + rnd() * 0.7;
+    const dx = Math.cos(a),
+      dz = Math.sin(a);
+    const px = -dz * 0.08,
+      pz = dx * 0.055;
+    const h = 0.55 + rnd() * 0.5;
+    const lean = 0.05 + rnd() * 0.1;
+    pos.push(px, 0, pz, -px, 0, -pz, dx * lean, h, dz * lean);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function createGrass(scene, CITY) {
+  let s = 246810;
+  const rnd = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  const bgrid = buildingGrid(CITY);
+  // Durva útrács, hogy a fű ne nőjön az aszfaltra (főleg csomópontoknál).
+  const rcell = 50;
+  const rgrid = new Map();
+  const rkey = (x, z) => Math.floor(x / rcell) + "," + Math.floor(z / rcell);
+  for (const r of CITY.roads) {
+    if (r.w < 2.5) continue;
+    for (let i = 0; i < r.p.length - 2; i += 2) {
+      const ax = r.p[i], az = r.p[i + 1], bx = r.p[i + 2], bz = r.p[i + 3];
+      const x0 = Math.floor(Math.min(ax, bx) / rcell);
+      const x1 = Math.floor(Math.max(ax, bx) / rcell);
+      const z0 = Math.floor(Math.min(az, bz) / rcell);
+      const z1 = Math.floor(Math.max(az, bz) / rcell);
+      for (let cx = x0; cx <= x1; cx++)
+        for (let cz = z0; cz <= z1; cz++) {
+          const k = rkey(cx * rcell, cz * rcell);
+          if (!rgrid.has(k)) rgrid.set(k, []);
+          rgrid.get(k).push([ax, az, bx, bz, r.w]);
+        }
+    }
+  }
+  const onRoad = (x, z) => {
+    const arr = rgrid.get(rkey(x, z));
+    if (!arr) return false;
+    for (const [ax, az, bx, bz, w] of arr) {
+      const vx = bx - ax, vz = bz - az;
+      const l2 = vx * vx + vz * vz || 1;
+      let t = ((x - ax) * vx + (z - az) * vz) / l2;
+      t = Math.max(0, Math.min(1, t));
+      const dx = x - (ax + vx * t), dz = z - (az + vz * t);
+      const lim = w / 2 - 0.15;
+      if (dx * dx + dz * dz < lim * lim) return true;
+    }
+    return false;
+  };
+  const points = [];
+  const MAX = 48000;
+
+  for (const a of CITY.areas) {
+    if (a.k !== "park" && a.k !== "forest") continue;
+    let minX = Infinity,
+      maxX = -Infinity,
+      minZ = Infinity,
+      maxZ = -Infinity;
+    for (let i = 0; i < a.p.length; i += 2) {
+      minX = Math.min(minX, a.p[i]);
+      maxX = Math.max(maxX, a.p[i]);
+      minZ = Math.min(minZ, a.p[i + 1]);
+      maxZ = Math.max(maxZ, a.p[i + 1]);
+    }
+    const area = Math.max(1, (maxX - minX) * (maxZ - minZ));
+    const want = Math.min(1600, Math.max(30, Math.round(area / 30)));
+    const step = Math.sqrt(area / want);
+    for (let gx = minX; gx < maxX && points.length < MAX; gx += step) {
+      for (let gz = minZ; gz < maxZ && points.length < MAX; gz += step) {
+        const x = gx + rnd() * step;
+        const z = gz + rnd() * step;
+        if (pointInPoly(x, z, a.p) && !bgrid.blocked(x, z, 0.6) && !onRoad(x, z))
+          points.push([x, z]);
+      }
+    }
+  }
+  // Fű az utak mentén is, hogy vezetés közben is látsszon.
+  const drivable = new Set([
+    "primary",
+    "secondary",
+    "tertiary",
+    "residential",
+    "unclassified",
+    "living_street",
+  ]);
+  const roads = CITY.roads.filter((r) => drivable.has(r.t) && r.w >= 5);
+  for (let i = roads.length - 1; i > 0; i--) {
+    const j = (rnd() * (i + 1)) | 0;
+    [roads[i], roads[j]] = [roads[j], roads[i]];
+  }
+  for (const r of roads) {
+    if (points.length >= MAX) break;
+    for (let i = 0; i < r.p.length - 2 && points.length < MAX; i += 2) {
+      const ax = r.p[i],
+        az = r.p[i + 1],
+        bx = r.p[i + 2],
+        bz = r.p[i + 3];
+      const dx = bx - ax,
+        dz = bz - az;
+      const len = Math.hypot(dx, dz) || 1;
+      const steps = Math.max(1, Math.floor(len / 4.5));
+      for (let k = 0; k < steps && points.length < MAX; k++) {
+        const t = (k + rnd()) / steps;
+        const x0 = ax + dx * t,
+          z0 = az + dz * t;
+        const side = rnd() < 0.5 ? 1 : -1;
+        const off = r.w / 2 + 1.2 + rnd() * 2.5;
+        const x = x0 + (-dz / len) * off * side;
+        const z = z0 + (dx / len) * off * side;
+        if (!bgrid.blocked(x, z) && !onRoad(x, z)) points.push([x, z]);
+      }
+    }
+  }
+
+  if (!points.length) return;
+
+  // Kétféle színárnyalat, hogy ne legyen egysíkú.
+  const geo = grassTuftGeometry();
+  const mat = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    vertexColors: false,
+  });
+  const grass = new THREE.InstancedMesh(geo, mat, points.length);
+  grass.castShadow = false;
+  grass.receiveShadow = true;
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const col = new THREE.Color();
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < points.length; i++) {
+    const [x, z] = points[i];
+    const sc = 0.7 + rnd() * 0.8;
+    scale.set(sc, 0.8 + rnd() * 0.5, sc);
+    q.setFromAxisAngle(up, rnd() * Math.PI * 2);
+    m.compose(new THREE.Vector3(x, 0.02, z), q, scale);
+    grass.setMatrixAt(i, m);
+    col.setHSL(0.22 + rnd() * 0.07, 0.5 + rnd() * 0.22, 0.3 + rnd() * 0.16);
+    grass.setColorAt(i, col);
+  }
+  grass.instanceMatrix.needsUpdate = true;
+  if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
+  scene.add(grass);
+}
+
 export function buildCity(scene, CITY) {
   scene.add(new THREE.HemisphereLight(0xcfe0f2, 0x55614c, 0.62));
   const sun = new THREE.DirectionalLight(0xfff2da, 2.45);
@@ -598,6 +761,7 @@ export function buildCity(scene, CITY) {
   }
 
   createTrees(scene, CITY);
+  createGrass(scene, CITY);
 
   scene.fog = new THREE.Fog(0xb9cbd8, 240, 1200);
 

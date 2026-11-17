@@ -156,6 +156,7 @@ export class TrafficLights {
   setState(item, state, time) {
     item.state = state;
     item.timer = time;
+    item.holdApplied = false;
     this.applyState(item);
   }
 
@@ -176,15 +177,20 @@ export class TrafficLights {
         else if (item.state === "green") this.setState(item, "yellow", YELLOW_TIME);
         else this.setState(item, "red", RED_TIME);
       }
-      // ha a busz megállt a pirosnál, ne váltson zöldre azonnal
+      // ha a busz megállt a pirosnál, egy rövid várakozást biztosítunk,
+      // de utána a lámpa mindenképp zöldre vált (nem tartjuk örökre pirosban)
       if (
         item.state === "red" &&
         d > 0 &&
         d < 26 &&
         Math.abs(speed) < 0.8 &&
-        item.timer < MIN_RED_WAIT
+        item.timer < MIN_RED_WAIT &&
+        !item.holdApplied
       ) {
         item.timer = MIN_RED_WAIT;
+        item.holdApplied = true;
+      } else if (item.state !== "red" || d <= 0 || d >= 26) {
+        item.holdApplied = false;
       }
     }
     this.active = active ? { d: bestD, state: active.state, item: active } : null;

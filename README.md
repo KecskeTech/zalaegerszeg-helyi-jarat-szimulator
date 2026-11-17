@@ -1,65 +1,78 @@
-﻿# Zalaegerszeg helyi járat szimulátor
+﻿# Zalaegerszeg Local Bus Simulator
 
-Böngészőben futó, 3D-s buszszimulátor Zalaegerszeg belvárosában. Valós
-buszmegállókkal, valós helyi járatútvonalakon, elektromos szólóbusszal,
-első és harmadik személyű nézettel, GPS-minitérképpel és működő
-jelzőlámpákkal.
+A browser-based 3D bus simulator set in downtown Zalaegerszeg, Hungary. It
+features real bus stops, real local bus routes, an electric solo bus,
+first- and third-person views, a GPS minimap and working traffic lights.
 
-## Indítás
+## Running
 
-Kell hozzá **Node.js 18 vagy újabb** (https://nodejs.org/). Telepítés után:
+You need **Node.js 18 or newer** (https://nodejs.org/). After installing it:
 
-- Windows: kattints duplán az `indito.bat` fájlra, vagy
-- parancssorból: `node server.mjs`
+- Windows: double-click `indito.bat`, or
+- from a terminal: `node server.mjs`
 
-A szimulátor ezután a <http://127.0.0.1:8123/> címen nyílik meg. A
-`server.mjs` csak statikus fájlokat szolgál ki, nincs függősége.
+The simulator then opens at <http://127.0.0.1:8123/>. `server.mjs` only
+serves static files and has no dependencies.
 
-Közvetlenül `index.html`-ként nem érdemes megnyitni: a böngészők a
-`file://` címről nem engedik betölteni az ES-modulokat.
+Opening `index.html` directly is not recommended: browsers do not allow
+ES modules to be loaded from a `file://` URL.
 
-## Irányítás
+## Controls
 
-| Billentyű | Művelet |
+| Key | Action |
 | --- | --- |
-| `W` / `↑` | gáz |
-| `S` / `↓` | fék, majd hátramenet |
-| `A` `D` / `←` `→` | kormányzás |
-| `Szóköz` | rögzítőfék |
-| `C` | első / harmadik személyű nézet |
-| `G` | autopilot be/ki |
-| `H` | hangos megállóbejelentés be/ki |
-| `R` | busz visszaállítása az útvonal elejére |
-| egérhúzás | kamera forgatása (harmadik személy) |
+| `W` / `↑` | throttle |
+| `S` / `↓` | brake, then reverse |
+| `A` `D` / `←` `→` | steering |
+| `Space` | parking brake |
+| `C` | first / third-person view |
+| `G` | autopilot on/off |
+| `H` | spoken stop announcements on/off |
+| `R` | reset the bus to the start of the route |
+| mouse drag | orbit the camera (third person) |
+| `B` | horn |
 
-A járatot a kezdőképernyőn kártyára kattintva lehet kiválasztani.
-Közvetlen hivatkozás is használható: `http://127.0.0.1:8123/?route=20`.
+Pick a route by clicking a card on the start screen. A direct link also
+works: `http://127.0.0.1:8123/?route=20`.
 
-## Utasok, hangok, kátyúk
+## Passengers, sounds, potholes
 
-- A megállókban utasok várakoznak; megálláskor beszállnak (az utastér ülései megtelnek), induláskor leszállók is vannak.
-- A busz hangja elektromos: halk gördülési zaj, magas inverter-sípolás, alacsony sebességnél AVAS-szerű figyelmeztető hang. 40 km/h felett utastér-zörgés/nyikorgás hallható.
-- Az útvonalon kátyúk vannak: áthaladva rázkódik a busz és tompa puffanás hallható.
-- Az épületeknek nem lehet nekimenni: ütközéskor a busz visszapattan, és a sebesség leesik.
+- Passengers wait at the stops; when you stop, they board and the seats fill
+  up, while alighting passengers leave as the bus departs.
+- The bus is electric: quiet tyre and road noise, a tonal motor whine that
+  rises with speed, a faint inverter tone and wind noise. Above 40 km/h the
+  cabin rattles and creaks.
+- AVAS (the pedestrian warning sound) only plays while the bus is rolling
+  below about 29 km/h -- never at standstill -- and is a low, soft whir
+  rather than a beep or siren.
+- There are potholes along the route: driving through one shakes the bus and
+  produces a dull thump.
+- Buildings are solid: collisions use the real building footprint, so there
+  are no invisible walls along diagonal or L-shaped blocks. A collision
+  bounces the bus back and bleeds off speed.
+- Parks and forests have 3D grass tufts. Grass is cosmetic: you never collide
+  with it, it only slows the bus slightly.
+- The bus handles like a 12 m vehicle, with a wide turning circle; sharp
+  corners need to be taken slowly.
 
-## Megállók és jelzőlámpák
+## Stops and traffic lights
 
-- **Megálló:** állj meg a sárga jelölésnél, 10 méteren belül, 5 km/h alatti
-  sebességgel. Az ajtók kinyílnak, a járat 1,7 másodperc után továbbindul,
-  a következő megállót a HUD és a hang is bejelenti.
-- **Jelzőlámpa:** minden kereszteződés előtt piros. A stopvonalnál megállva
-  rövid várakozás után zöldre vált, és a busz mehet. Ez szándékos
-  játékmenet-könnyítés: a valós forgalomhoz képest a lámpa mindig a busz
-  érkezésére vár.
+- **Stop:** stop at the yellow marking, within 10 metres and below 5 km/h.
+  The doors open, the route continues after 3 seconds, and the next stop is
+  announced both in the HUD and by voice.
+- **Traffic light:** lights run their own red-yellow-green cycle. If you stop
+  at a red light, it holds you for about 4.5 seconds and then turns green --
+  it never stays red forever. This is a gameplay simplification: the light
+  effectively waits for the bus to arrive.
 
-## Járatok
+## Routes
 
-A belvárosi járatok szerepelnek (a Botfa és a Kökényesmindszent irányú
-járatok egyelőre nem):
+Downtown routes are included (the Botfa and Kökényesmindszent directions are
+not yet):
 
-| Jelzés | Útvonal |
+| Ref | Route |
 | --- | --- |
-| 20 | Kovács Károly tér – Gasparich utca – Landorhegy – Kovács Károly tér (körjárat) |
+| 20 | Csertán Sándor utca – Kovács Károly tér – Gasparich utca – Csertán Sándor utca (circular) |
 | 9 | Kertváros – Páterdomb – Tesco – Autóbusz-állomás |
 | 18 | Vasútállomás – Széchenyi tér – Kertváros – Kovács Károly tér |
 | 3 | Vasútállomás – Kaszaháza – Nekeresd – Pózva |
@@ -68,51 +81,57 @@ járatok egyelőre nem):
 | 5 | Kertváros – Kovács Károly tér – Neszele – Ságod |
 | 6 | Autóbusz-állomás – Hűtőipari Zrt. – Szenterzsébethegy |
 | 25 | Olai bisztró – Kertváros – Kovács Károly tér |
-| 29 | Vasútállomás – Kertváros – Landorhegy – Vasútállomás (körjárat) |
+| 29 | Vasútállomás – Kertváros – Landorhegy – Vasútállomás (circular) |
 | 19A | Kertváros – Kovács Károly tér – Autóbusz-állomás |
 
-## Adatok és jogok
+## Data and credits
 
-- **Város és megállók:** OpenStreetMap (© OpenStreetMap közreműködők,
-  ODbL licenc). Az utak, épületek, zöldfelületek és a 164 valós
-  buszmegálló az OSM-ből származik.
-- **Útvonalak:** a MÁV-csoport / Volánbusz zalaegerszegi helyi
-  menetrendje (2026. szeptember 1.) szerinti járatleírások. A valós
-  útvonal-geometriát az OSRM nyilvános útvonaltervezője állítja elő a
-  megállók sorrendje alapján.
-- **Busz:** eredeti, saját modellezésű alacsonypadlós elektromos szólóbusz,
-  a Zalaegerszegen közlekedő BYD elektromos buszok ihletésével. Nem
-  tartalmaz gyári védjegyet, logót vagy másolt arculatot.
+- **City and stops:** OpenStreetMap (© OpenStreetMap contributors, ODbL
+  licence). The roads, buildings, green areas and the 164 OSM bus stops come
+  from OSM; three timetable stops missing from OSM are added from the
+  official stop list.
+- **Routes:** route descriptions from the MÁV-csoport / Volánbusz Zalaegerszeg
+  local timetable (1 September 2026). The real route geometry is produced by
+  the public OSRM router from the order of the stops.
+- **Bus:** an original, custom-modelled low-floor electric solo bus inspired
+  by the BYD electric buses running in Zalaegerszeg. It contains no factory
+  trademarks, logos or copied livery.
 
-## Felépítés
+## Layout
 
 ```
-index.html                  kezdőképernyő és HUD
-css/style.css               felület
-js/main.js                  jelenet, kamera, játékciklus, HUD
-js/city.js                  OSM város -> 3D geometria (utak, épületek, fák)
-js/bus.js                   buszmodell és cockpit
-js/driver.js                járműfizika, útvonalkövetés, megállólogika
-js/traffic.js               jelzőlámpák
-js/markers.js               útvonalvonal, megállótáblák, öböljelölés
-js/minimap.js               GPS-minitérkép
-js/data/zalaegerszeg.js     generált adat (ne szerkeszd kézzel)
-tools/build-data.mjs        adatépítő (OSM + OSRM)
-raw/                        letöltött nyers OSM adatok
+index.html                  start screen and HUD
+css/style.css               interface styling
+js/main.js                  scene, camera, game loop, HUD
+js/city.js                  OSM city -> 3D geometry (roads, buildings, trees)
+js/bus.js                   bus model and cockpit
+js/driver.js                vehicle physics, route following, stop logic
+js/traffic.js               traffic lights
+js/markers.js               route line, stop signs, bay markings
+js/minimap.js               GPS minimap
+js/passengers.js            waiting, boarding and alighting passengers
+js/potholes.js              potholes on the route
+js/audio.js                 procedural electric bus soundscape
+js/data/zalaegerszeg.js     generated data (do not edit by hand)
+tools/build-data.mjs        data builder (OSM + routing)
+raw/                        downloaded raw OSM data
 vendor/three.module.js      three.js
-server.mjs                  helyi webszerver
+server.mjs                  local web server
+docs/agent/                 guides for AI coding agents
+AGENTS.md                   entry point for AI coding agents
 ```
 
-Az adat újragenerálása (internetkapcsolat kell hozzá):
+Regenerate the data (requires an internet connection):
 
 ```
 node tools/build-data.mjs
 ```
 
-## Ismert egyszerűsítések
+## Known simplifications
 
-- A város a valós utcahálózatot követi, de az épületek tömegek, nem
-  fotórealisztikus modellek.
-- Nincs ütközésdetektálás: a busszal le lehet hajtani a járdára is.
-- A forgalom (többi autó, utasok) nem szimulált.
-
+- The city follows the real street network, but buildings are block masses,
+  not photorealistic models.
+- Traffic rules are simplified: pavements are drivable and other vehicles are
+  not simulated.
+- Traffic lights are scripted per route rather than simulating full junction
+  phases.

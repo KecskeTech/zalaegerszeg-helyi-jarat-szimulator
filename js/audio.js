@@ -1,6 +1,11 @@
-// Elektromos busz hangok (WebAudio, procedurális).
-// Jelleg: halk gumi/útzaj, magas inverter-sípolás, AVAS alacsony sebességnél,
-// 40 km/h felett utastér-zörgés / nyikorgás. Nincs dízelmoraj.
+// Electric bus soundscape (WebAudio, procedural).
+//
+// Layering follows how a real battery-electric bus sounds:
+//  - tyre/road noise and wind dominate as speed rises,
+//  - a tonal motor whine rises with motor RPM (pitch tracks speed),
+//  - a faint inverter switching tone sits above the motor whine,
+//  - AVAS (pedestrian warning) is only active while rolling slowly,
+//    never at standstill, and is a soft low whir instead of a siren.
 export class BusAudio {
   constructor() {
     this.ctx = null;
@@ -22,6 +27,7 @@ export class BusAudio {
     this.master.gain.value = this.enabled ? 0.9 : 0;
     this.master.connect(ctx.destination);
 
+    // One shared noise buffer, reused by every filtered noise layer.
     const len = ctx.sampleRate * 2;
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = buf.getChannelData(0);
@@ -35,71 +41,157 @@ export class BusAudio {
       return s;
     };
 
-    // gördülési zaj (domináns)
-    this.roadGain = ctx.createGain();
-    this.roadGain.gain.value = 0;
-    const rl = ctx.createBiquadFilter();
-    rl.type = "lowpass";
-    rl.frequency.value = 1100;
-    noise().connect(rl);
-    rl.connect(this.roadGain).connect(this.master);
+    // --- tyre / road ---------------------------------------------------
+    // Low rumble: the body of the rolling noise.
+    this.rumbleGain = ctx.createGain();
+    this.rumbleGain.gain.value = 0;
+    const rumbleLp = ctx.createBiquadFilter();
+    rumbleLp.type = "lowpass";
+    rumbleLp.frequency.value = 320;
+    rumbleLp.Q.value = 0.6;
+    noise().connect(rumbleLp);
+    rumbleLp.connect(this.rumbleGain).connect(this.master);
 
-    // szél
+    // Tread hiss: narrow band around 700 Hz, much quieter than the rumble.
+    this.treadGain = ctx.createGain();
+    this.treadGain.gain.value = 0;
+    const treadBp = ctx.createBiquadFilter();
+    treadBp.type = "bandpass";
+    treadBp.frequency.value = 720;
+    treadBp.Q.value = 0.55;
+    const treadLp = ctx.createBiquadFilter();
+    treadLp.type = "lowpass";
+    treadLp.frequency.value = 1900;
+    noise().connect(treadBp);
+    treadBp.connect(treadLp);
+    treadLp.connect(this.treadGain).connect(this.master);
+
+    // --- wind ----------------------------------------------------------
     this.windGain = ctx.createGain();
     this.windGain.gain.value = 0;
-    const wh = ctx.createBiquadFilter();
-    wh.type = "highpass";
-    wh.frequency.value = 2200;
-    noise().connect(wh);
-    wh.connect(this.windGain).connect(this.master);
+    const windHp = ctx.createBiquadFilter();
+    windHp.type = "highpass";
+    windHp.frequency.value = 1800;
+    noise().connect(windHp);
+    windHp.connect(this.windGain).connect(this.master);
 
-    // inverter-sípolás (magas, halk, nem porszívó)
-    this.whineGain = ctx.createGain();
-    this.whineGain.gain.value = 0;
-    const bpw = ctx.createBiquadFilter();
-    bpw.type = "bandpass";
-    bpw.frequency.value = 2400;
-    bpw.Q.value = 1.6;
-    this.whine = ctx.createOscillator();
-    this.whine.type = "sine";
-    this.whine.frequency.value = 1800;
-    this.whine.connect(bpw);
-    bpw.connect(this.whineGain).connect(this.master);
-    this.whine.start();
-    this.whine2 = ctx.createOscillator();
-    this.whine2.type = "sine";
-    this.whine2.frequency.value = 2700;
-    const g2 = ctx.createGain();
-    g2.gain.value = 0.35;
-    this.whine2.connect(g2);
-    g2.connect(this.whineGain);
-    this.whine2.start();
+    // --- motor whine ---------------------------------------------------
+    // Electromagnetic force ripple: a clean tone whose pitch follows RPM,
+    // plus two harmonics. A lowpass keeps it from sounding like a vacuum.
+    this.motorGain = ctx.createGain();
+    this.motorGain.gain.value = 0;
+    const motorLp = ctx.createBiquadFilter();
+    motorLp.type = "lowpass";
+    motorLp.frequency.value = 1600;
+    motorLp.Q.value = 0.4;
+    motorLp.connect(this.motorGain).connect(this.master);
 
-    // AVAS (gyalogosfigyelmeztető) alacsony sebességnél
+    this.motor1 = ctx.createOscillator();
+    this.motor1.type = "triangle";
+    this.motor1.frequency.value = 40;
+    const m1g = ctx.createGain();
+    m1g.gain.value = 0.55;
+    this.motor1.connect(m1g);
+    m1g.connect(motorLp);
+    this.motor1.start();
+
+    this.motor2 = ctx.createOscillator();
+    this.motor2.type = "sine";
+    this.motor2.frequency.value = 80;
+    const m2g = ctx.createGain();
+    m2g.gain.value = 0.22;
+    this.motor2.connect(m2g);
+    m2g.connect(motorLp);
+    this.motor2.start();
+
+    this.motor3 = ctx.createOscillator();
+    this.motor3.type = "sine";
+    this.motor3.frequency.value = 120;
+    const m3g = ctx.createGain();
+    m3g.gain.value = 0.07;
+    this.motor3.connect(m3g);
+    m3g.connect(motorLp);
+    this.motor3.start();
+
+    // Inverter switching tone: high, very quiet, mostly masked at speed.
+    this.inverterGain = ctx.createGain();
+    this.inverterGain.gain.value = 0;
+    const invBp = ctx.createBiquadFilter();
+    invBp.type = "bandpass";
+    invBp.frequency.value = 950;
+    invBp.Q.value = 2.2;
+    this.inverter = ctx.createOscillator();
+    this.inverter.type = "sine";
+    this.inverter.frequency.value = 950;
+    this.inverter.connect(invBp);
+    invBp.connect(this.inverterGain).connect(this.master);
+    this.inverter.start();
+
+    // --- AVAS (pedestrian warning) -------------------------------------
+    // Only while rolling below ~29 km/h. Soft low-frequency whir with a
+    // gentle amplitude tremolo so it reads as "vehicle", not "siren".
     this.avasGain = ctx.createGain();
     this.avasGain.gain.value = 0;
-    this.avas = ctx.createOscillator();
-    this.avas.type = "sine";
-    this.avas.frequency.value = 1150;
-    this.avas.connect(this.avasGain).connect(this.master);
-    this.avas.start();
-    this.vib = ctx.createOscillator();
-    this.vib.frequency.value = 3.1;
-    const vg = ctx.createGain();
-    vg.gain.value = 18;
-    this.vib.connect(vg);
-    vg.connect(this.avas.frequency);
-    this.vib.start();
+    this.avasTrem = ctx.createGain();
+    this.avasTrem.gain.value = 1;
+    this.avasGain.connect(this.avasTrem).connect(this.master);
 
-    // utastér-zörgés 40 km/h felett
+    const avasLfo = ctx.createOscillator();
+    avasLfo.type = "sine";
+    avasLfo.frequency.value = 6.5;
+    const avasLfoGain = ctx.createGain();
+    avasLfoGain.gain.value = 0.12;
+    avasLfo.connect(avasLfoGain);
+    avasLfoGain.connect(this.avasTrem.gain);
+    avasLfo.start();
+
+    this.avas1 = ctx.createOscillator();
+    this.avas1.type = "triangle";
+    this.avas1.frequency.value = 155;
+    const a1g = ctx.createGain();
+    a1g.gain.value = 0.6;
+    this.avas1.connect(a1g);
+    a1g.connect(this.avasGain);
+    this.avas1.start();
+
+    this.avas2 = ctx.createOscillator();
+    this.avas2.type = "sine";
+    this.avas2.frequency.value = 310;
+    const a2g = ctx.createGain();
+    a2g.gain.value = 0.28;
+    this.avas2.connect(a2g);
+    a2g.connect(this.avasGain);
+    this.avas2.start();
+
+    this.avas3 = ctx.createOscillator();
+    this.avas3.type = "sine";
+    this.avas3.frequency.value = 465;
+    const a3g = ctx.createGain();
+    a3g.gain.value = 0.08;
+    this.avas3.connect(a3g);
+    a3g.connect(this.avasGain);
+    this.avas3.start();
+
+    const avasNoise = noise();
+    const avasBp = ctx.createBiquadFilter();
+    avasBp.type = "bandpass";
+    avasBp.frequency.value = 600;
+    avasBp.Q.value = 0.8;
+    const avasNg = ctx.createGain();
+    avasNg.gain.value = 0.1;
+    avasNoise.connect(avasBp);
+    avasBp.connect(avasNg);
+    avasNg.connect(this.avasGain);
+
+    // --- cabin rattle above ~40 km/h -----------------------------------
     this.rattleGain = ctx.createGain();
     this.rattleGain.gain.value = 0;
-    const rb = ctx.createBiquadFilter();
-    rb.type = "bandpass";
-    rb.frequency.value = 2600;
-    rb.Q.value = 0.7;
-    noise().connect(rb);
-    rb.connect(this.rattleGain).connect(this.master);
+    const rattleBp = ctx.createBiquadFilter();
+    rattleBp.type = "bandpass";
+    rattleBp.frequency.value = 2400;
+    rattleBp.Q.value = 0.7;
+    noise().connect(rattleBp);
+    rattleBp.connect(this.rattleGain).connect(this.master);
   }
 
   setEnabled(on) {
@@ -111,24 +203,46 @@ export class BusAudio {
     if (!this.ctx) return;
     const v = Math.max(0, Math.abs(speed));
     const t = this.ctx.currentTime;
-    this.roadGain.gain.setTargetAtTime(Math.min(0.17, v * 0.013), t, 0.2);
-    this.windGain.gain.setTargetAtTime(Math.min(0.045, v * v * 0.00024), t, 0.25);
-    const f = 1500 + v * 95;
-    this.whine.frequency.setTargetAtTime(f, t, 0.15);
-    this.whine2.frequency.setTargetAtTime(f * 1.5, t, 0.15);
-    this.whineGain.gain.setTargetAtTime(active ? 0.0045 + Math.min(0.006, v * 0.0005) + Math.abs(throttle) * 0.004 : 0, t, 0.2);
-    this.avasGain.gain.setTargetAtTime(active && v < 7.5 ? 0.022 * (1 - v / 7.5) : 0, t, 0.25);
-    this.avas.frequency.setTargetAtTime(1080 + v * 22, t, 0.2);
+    const road = Math.min(1, v / 14);
 
-    // zörgés / nyikorgás 11 m/s (≈40 km/h) felett
+    this.rumbleGain.gain.setTargetAtTime(active ? Math.min(0.2, v * 0.015) : 0, t, 0.22);
+    this.treadGain.gain.setTargetAtTime(active ? Math.min(0.06, v * 0.0055) : 0, t, 0.22);
+    this.windGain.gain.setTargetAtTime(active ? Math.min(0.055, v * v * 0.00028) : 0, t, 0.3);
+
+    // Motor pitch tracks RPM. At standstill there is only a faint idle hum.
+    const fMotor = 32 + v * 24;
+    this.motor1.frequency.setTargetAtTime(fMotor, t, 0.12);
+    this.motor2.frequency.setTargetAtTime(fMotor * 2, t, 0.12);
+    this.motor3.frequency.setTargetAtTime(fMotor * 3, t, 0.12);
+    const motorLevel = active
+      ? 0.004 + road * 0.016 + Math.abs(throttle) * 0.01
+      : 0;
+    this.motorGain.gain.setTargetAtTime(motorLevel, t, 0.18);
+
+    const fInv = 600 + v * 110;
+    this.inverter.frequency.setTargetAtTime(fInv, t, 0.15);
+    this.inverterGain.gain.setTargetAtTime(
+      active ? 0.0015 + road * 0.0022 + Math.abs(throttle) * 0.0012 : 0,
+      t,
+      0.2
+    );
+
+    // AVAS: off at standstill, fades in above walking pace and out by ~29 km/h.
+    const avasLevel = active && v > 0.35 && v < 8 ? Math.min(1, (v - 0.35) / 1.2) * (1 - v / 8) : 0;
+    this.avasGain.gain.setTargetAtTime(avasLevel * 0.03, t, 0.15);
+    this.avas1.frequency.setTargetAtTime(150 + v * 9, t, 0.2);
+    this.avas2.frequency.setTargetAtTime(300 + v * 18, t, 0.2);
+    this.avas3.frequency.setTargetAtTime(450 + v * 27, t, 0.2);
+
+    // Rattle / creak above 11 m/s (about 40 km/h).
     const rattle = active ? Math.max(0, Math.min(1, (v - 11) / 7)) : 0;
-    const jitter = rattle * (0.012 + Math.random() * 0.022);
+    const jitter = rattle * (0.01 + Math.random() * 0.016);
     this.rattleGain.gain.setTargetAtTime(jitter, t, 0.05);
     if (rattle > 0.25) {
       this.creakIn -= dt;
       if (this.creakIn <= 0) {
         this.creakIn = 0.5 + Math.random() * 2.2;
-        this.creak(0.02 + rattle * 0.05);
+        this.creak(0.015 + rattle * 0.04);
       }
     }
   }
