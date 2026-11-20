@@ -20,6 +20,9 @@ returns the current state object consumed by `main.js`.
 - Crossing a red or yellow light is a penalty: the driver emits
   `redlight`, and `main.js` adds 10 seconds to the ride time. Detection
   compares `prevProgress` with the light's `s` inside `driver.update()`.
+  There is a 10% chance the violation instead triggers the fake BSOD /
+  kernel-panic overlay (`#crash-overlay`), which freezes the loop until a
+  click or key press reloads the page.
 - The bus follows a route by projecting its position onto the route path and
   tracking `progress` (metres along the route).
 - Buildings are solid: `hitsBuilding()` uses a spatial grid of exact building

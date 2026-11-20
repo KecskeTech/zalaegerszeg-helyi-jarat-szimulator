@@ -735,7 +735,7 @@ export function buildCity(scene, CITY) {
   const walkB = new Builder();
   for (const w of CITY.walkways) {
     const col = new THREE.Color(ROAD_COLORS[w.t] || 0x6d7176);
-    ribbon(walkB, w.p, w.w, 0.026, [col.r, col.g, col.b]);
+    ribbon(walkB, w.p, w.w, 0.14, [col.r, col.g, col.b]);
   }
   if (!walkB.empty) {
     const m = new THREE.Mesh(

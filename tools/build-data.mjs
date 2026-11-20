@@ -735,6 +735,7 @@ const MANUAL_JUNCTIONS = [
   [46.83321, 16.84759], // Vasútállomás
   [46.84469, 16.84601], // Széchenyi tér
   [46.8445, 16.84758], // Kovács Károly tér
+  [46.84521, 16.8439], // Kazinczy tér – Ady Endre utca
   [46.84485, 16.85976], // Tesco
   [46.8531, 16.84525], // Kaszaháza
   [46.83432, 16.82819], // Csertán Sándor utca
