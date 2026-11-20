@@ -20,14 +20,16 @@ returns the current state object consumed by `main.js`.
 - Crossing a red or yellow light is a penalty: the driver emits
   `redlight`, and `main.js` adds 10 seconds to the ride time. Detection
   compares `prevProgress` with the light's `s` inside `driver.update()`.
-  A `redlight` event has a 25% chance to trigger a host crash instead:
+  A `redlight` event has a 25% chance to crash the host instead:
   `requestHostCrash()` POSTs `/api/crash`, and `server.mjs` raises a real
   BSOD / kernel panic on the machine running the server, chosen by
-  `process.platform` (Windows `NtRaiseHardError` with `csrss` fallback,
-  Linux sysrq `c`, macOS launchd/reboot best effort). Elevation may be
-  requested. If no server answers (or the panic is denied), the in-page
-  fake `#crash-overlay` is shown after ~1.6 s so the game still reacts.
-  Raising a bugcheck needs admin on Windows and root on Linux/macOS.
+  `process.platform`. Windows uses `NtRaiseHardError` with
+  `OptionShutdownSystem` after `RtlAdjustPrivilege(SeShutdownPrivilege)`;
+  that privilege is held by the interactive user by default, so no admin
+  or UAC prompt is needed. Linux writes sysrq `c` to
+  `/proc/sysrq-trigger` (root), macOS does a launchd/reboot best effort.
+  There is no in-page overlay: if the server is unreachable the HUD shows
+  an error and the game keeps running.
 - The bus follows a route by projecting its position onto the route path and
   tracking `progress` (metres along the route).
 - Buildings are solid: `hitsBuilding()` uses a spatial grid of exact building

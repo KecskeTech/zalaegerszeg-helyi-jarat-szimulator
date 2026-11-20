@@ -83,51 +83,13 @@ const ui = {
   help: $("help"),
 };
 
-const crashOverlay = $("crash-overlay");
-const crashInner = $("crash-inner");
-let crashed = false;
-
-function triggerCrash() {
-  if (crashed) return;
-  crashed = true;
-  const kernel = Math.random() < 0.5;
-  crashOverlay.classList.toggle("kernel", kernel);
-  crashInner.innerHTML = kernel
-    ? `<div class="crash-kernel">[    0.000000] Linux version 6.8.0-generic (buildd@lcy02) #1 SMP PREEMPT_DYNAMIC
-[    3.104512] bus-sim[1337]: red light violation detected
-[    4.211337] Kernel panic - not syncing: Fatal exception in interrupt
-[    4.211500] CPU: 0 PID: 1 Comm: bus-sim Tainted: G           OE
-[    4.211620] Hardware name: Zalaegerszeg Transit / eBus, BIOS 1.0
-[    4.211700] Call Trace:
-[    4.211780]  &lt;TASK&gt;
-[    4.211860]  red_light_violation+0x10/0x20
-[    4.211940]  driver_update+0x1a4/0x220
-[    4.212020]  frame+0x2c/0x80
-[    4.212100]  &lt;/TASK&gt;
-[    4.212180] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---</div>`
-    : `<div class="face">:(</div>
-<h1>A gép hibába futott, és újra kell indítania.</h1>
-<p>Ha szeretne többet megtudni, később rákereshet a következőre: CRITICAL_PROCESS_DIED</p>
-<p class="crash-code">Leállási kód: 0x000000EF · Piros jelzőlámpa szabálysértés</p>`;
-  crashOverlay.classList.remove("hidden");
-  speechSynthesis?.cancel?.();
-  audio.setEnabled(false);
-}
-
-crashOverlay.addEventListener("click", () => location.reload());
-window.addEventListener("keydown", () => {
-  if (crashed) location.reload();
-});
-
 // A red-light violation can bugcheck the machine that runs `node server.mjs`.
 // The page cannot raise a panic itself, so it asks the local server.
 function requestHostCrash() {
   announce("Rendszerhiba!", "A hoszt leáll");
-  fetch("/api/crash", { method: "POST" }).catch(() => triggerCrash());
-  // If the host survives (no admin/root, or no server), show the overlay.
-  setTimeout(() => {
-    if (!crashed) triggerCrash();
-  }, 1600);
+  fetch("/api/crash", { method: "POST" }).catch(() => {
+    announce("Rendszerhiba!", "A szerver nem elérhető");
+  });
 }
 
 let route = null;
@@ -452,11 +414,6 @@ let lastLight = null;
 function frame() {
   requestAnimationFrame(frame);
   const dt = Math.min(clock.getDelta(), 0.05);
-
-  if (crashed) {
-    renderer.render(scene, camera);
-    return;
-  }
 
   if (route && rideStarted) {
     elapsed += dt;

