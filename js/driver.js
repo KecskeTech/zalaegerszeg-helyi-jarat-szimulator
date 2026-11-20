@@ -221,6 +221,7 @@ export class Driver {
     this.doorOpen = false;
     this.lightHoldTimer = 0;
     this.justDeparted = false;
+    this.redViolations = 0;
   }
 
   teleport(s) {
@@ -321,7 +322,10 @@ export class Driver {
       this.speed -= Math.sign(this.speed || 1) * 7.5 * dt;
       if (Math.abs(this.speed) < 0.15) this.speed = 0;
     } else if (throttle > 0.01) {
-      this.speed += 2.75 * throttle * dt;
+      // Elektromos nyomatékgörbe: álló helyzetből erős húzás,
+      // nagy sebességnél fokozatosan csökkenő gyorsítás.
+      const drive = Math.max(0.8, 3.4 - this.speed * 0.03);
+      this.speed += drive * throttle * dt;
     } else if (throttle < -0.01) {
       if (this.speed > 0.4) this.speed -= 4.6 * Math.abs(throttle) * dt;
       else this.speed += 1.5 * throttle * dt;
@@ -357,6 +361,7 @@ export class Driver {
     this.yawRate = yawRate;
 
     // --- útvonal követés ---
+    const prevProgress = this.progress;
     let bestI = this.pi,
       bestD = Infinity;
     const lo = Math.max(0, this.pi - 70),
@@ -388,6 +393,21 @@ export class Driver {
     const along =
       (this.x - r.path[bestI][0]) * t[0] + (this.z - r.path[bestI][1]) * t[1];
     this.progress = clamp(r.cum[bestI] + along, 0, r.length);
+
+    // --- piros lámpa büntetés ---
+    if (traffic && traffic.items && this.speed > 0) {
+      for (const light of traffic.items) {
+        if (
+          light.s > prevProgress &&
+          light.s <= this.progress &&
+          (light.state === "red" || light.state === "yellow")
+        ) {
+          this.redViolations = (this.redViolations || 0) + 1;
+          this.onEvent("redlight", null);
+          break;
+        }
+      }
+    }
 
     // --- megállók ---
     const stop = r.stops[this.nextStop];

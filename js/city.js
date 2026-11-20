@@ -44,28 +44,69 @@ function hash01(i) {
 
 function buildingTexture() {
   const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 256;
+  c.width = 512;
+  c.height = 512;
   const g = c.getContext("2d");
-  g.fillStyle = "#ffffff";
-  g.fillRect(0, 0, 256, 256);
-  g.fillStyle = "#959ba1";
-  g.fillRect(56, 66, 144, 146);
-  g.fillStyle = "#5a6a76";
-  g.fillRect(64, 74, 128, 130);
-  g.fillStyle = "rgba(255,255,255,0.24)";
-  g.fillRect(64, 74, 128, 18);
-  g.fillStyle = "rgba(0,0,0,0.18)";
-  g.fillRect(64, 142, 128, 4);
-  g.fillStyle = "rgba(0,0,0,0.14)";
-  g.fillRect(56, 208, 144, 10);
-  g.fillStyle = "rgba(255,255,255,0.35)";
-  g.fillRect(56, 206, 144, 3);
+  g.fillStyle = "#d9dad4";
+  g.fillRect(0, 0, 512, 512);
+
+  // homlokzati panelhézagok
+  for (let x = 0; x < 512; x += 128) {
+    g.fillStyle = "rgba(0,0,0,0.05)";
+    g.fillRect(x, 0, 2, 512);
+  }
+  // szintosztók
+  for (let y = 0; y < 512; y += 128) {
+    g.fillStyle = "rgba(255,255,255,0.06)";
+    g.fillRect(0, y + 120, 512, 3);
+    g.fillStyle = "rgba(0,0,0,0.07)";
+    g.fillRect(0, y + 124, 512, 2);
+  }
+
+  // 3x3 ablak, párkányokkal és üvegtükröződéssel
+  for (let r = 0; r < 3; r++) {
+    for (let k = 0; k < 3; k++) {
+      const x = k * 170 + 40;
+      const y = r * 170 + 34;
+      const w = 92;
+      const h = 104;
+      g.fillStyle = "#8e9494";
+      g.fillRect(x - 6, y - 6, w + 12, h + 12);
+      const grad = g.createLinearGradient(x, y, x + w, y + h);
+      grad.addColorStop(0, "#6c7f86");
+      grad.addColorStop(0.45, "#3f5159");
+      grad.addColorStop(1, "#2b363c");
+      g.fillStyle = grad;
+      g.fillRect(x, y, w, h);
+      g.fillStyle = "rgba(255,255,255,0.16)";
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x + w * 0.55, y);
+      g.lineTo(x, y + h * 0.7);
+      g.closePath();
+      g.fill();
+      g.fillStyle = "#9aa09e";
+      g.fillRect(x + w / 2 - 2, y, 4, h);
+      g.fillStyle = "rgba(0,0,0,0.18)";
+      g.fillRect(x - 8, y + h + 6, w + 16, 6);
+      g.fillStyle = "rgba(255,255,255,0.35)";
+      g.fillRect(x - 8, y + h + 4, w + 16, 2);
+    }
+  }
+
+  // kosz és párkány
+  g.fillStyle = "rgba(40,45,40,0.10)";
+  g.fillRect(0, 470, 512, 42);
+  g.fillStyle = "rgba(255,255,255,0.25)";
+  g.fillRect(0, 0, 512, 6);
+  g.fillStyle = "rgba(0,0,0,0.10)";
+  g.fillRect(0, 6, 512, 4);
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 4;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -247,8 +288,8 @@ function addBuilding(wallB, roofB, plinthB, flat, height, colorIdx) {
     if (len < 0.4) continue;
     const shade = (0.78 + 0.22 * Math.abs(dz / (len || 1))) * brightness;
     const c = scaleColor(wall, shade);
-    const u1 = len / 2.9;
-    const v1 = height / 3.15;
+    const u1 = len / 9.0;
+    const v1 = height / 9.0;
     wallB.quad(
       [ax, base, az],
       [bx, base, bz],
@@ -632,15 +673,15 @@ export function buildCity(scene, CITY) {
   const sun = new THREE.DirectionalLight(0xfff2da, 2.45);
   sun.position.set(-320, 480, 260);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -95;
-  sun.shadow.camera.right = 95;
-  sun.shadow.camera.top = 95;
-  sun.shadow.camera.bottom = -95;
+  sun.shadow.mapSize.set(4096, 4096);
+  sun.shadow.camera.left = -140;
+  sun.shadow.camera.right = 140;
+  sun.shadow.camera.top = 140;
+  sun.shadow.camera.bottom = -140;
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 700;
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.55;
+  sun.shadow.camera.far = 900;
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.8;
   scene.add(sun);
   scene.add(sun.target);
   const fill = new THREE.DirectionalLight(0x9fb6d0, 0.26);
@@ -752,9 +793,11 @@ export function buildCity(scene, CITY) {
     addBuilding(wallB, roofB, plinthB, b.p, b.h, i);
   }
   if (!wallB.empty) {
-    const wallMat = new THREE.MeshLambertMaterial({
+    const wallMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
       map: buildingTexture(),
+      roughness: 0.86,
+      metalness: 0.04,
       side: THREE.DoubleSide,
     });
     const m = new THREE.Mesh(wallB.geometry(), wallMat);
@@ -765,7 +808,12 @@ export function buildCity(scene, CITY) {
   if (!plinthB.empty) {
     const m = new THREE.Mesh(
       plinthB.geometry(),
-      new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.95,
+        metalness: 0.02,
+        side: THREE.DoubleSide,
+      })
     );
     m.castShadow = true;
     m.receiveShadow = true;
@@ -774,7 +822,12 @@ export function buildCity(scene, CITY) {
   if (!roofB.empty) {
     const m = new THREE.Mesh(
       roofB.geometry(),
-      new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.92,
+        metalness: 0.03,
+        side: THREE.DoubleSide,
+      })
     );
     m.castShadow = true;
     m.receiveShadow = true;

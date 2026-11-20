@@ -64,6 +64,8 @@ works: `http://127.0.0.1:8123/?route=20`.
   at a red light, it holds you for about 4.5 seconds and then turns green --
   it never stays red forever. This is a gameplay simplification: the light
   effectively waits for the bus to arrive.
+- **Red-light penalty:** driving through a red or yellow light adds 10 seconds
+  to the ride time and shows a warning on the HUD.
 
 ## Routes
 

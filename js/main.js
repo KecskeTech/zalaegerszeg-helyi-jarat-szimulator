@@ -320,6 +320,10 @@ driver.onEvent = (type, stop) => {
   } else if (type === "crash") {
     audio.thud();
     bumpT = 0.45;
+  } else if (type === "redlight") {
+    elapsed += 10;
+    announce("Piros lámpa!", "+10 mp büntetés");
+    speak("Piros lámpa. Tíz másodperc büntetés.");
   } else if (type === "skip") {
     announce(stop.n, "Kihagyott megálló");
   } else if (type === "complete") {
@@ -437,7 +441,7 @@ function frame() {
     bus.userData.setDoors(st.doorOpen);
     const spin = (st.speed * dt) / 0.54;
     for (const w of bus.userData.wheels) w.rotation.x += spin;
-    if (cockpit.userData.wheel) cockpit.userData.wheel.rotation.z = -st.steer * 2.5;
+    if (cockpit.userData.wheel) cockpit.userData.wheel.rotation.z = st.steer * 2.5;
 
     const info = traffic ? traffic.update(dt, st.progress, Math.abs(st.speed)) : null;
     lastLight = info;

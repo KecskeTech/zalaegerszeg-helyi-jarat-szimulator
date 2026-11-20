@@ -7,15 +7,19 @@
 returns the current state object consumed by `main.js`.
 
 - Units are metres and seconds; `speed` is m/s. There is no forward speed
-  clamp: engine acceleration (2.75 m/s²) and rolling drag settle at about
-  21.8 m/s (~78 km/h). Reverse maximum is -4.2 m/s.
+  clamp. The electric torque curve (`3.4 - 0.03 * speed`, floor 0.8 m/s²)
+  and rolling drag settle at about 21.8 m/s (~78 km/h). Reverse maximum is
+  -4.2 m/s.
 - Steering is speed-sensitive: the maximum steer angle shrinks with speed.
   `WHEELBASE = 7.0` and the low-speed steer limit of 0.62 rad give a ~10 m
   turning circle, so the bus can turn at walking pace. The steer rate is also
   faster at low speed (`maxRate` 2.2 rad/s, down to 0.7 at top speed).
-- The cockpit steering wheel follows `-steer`, and the player input maps
-  left to +1 and right to -1. Flip both together or the bus will turn against
-  the key press and the wheel against the bus.
+- The cockpit steering wheel follows `+steer`, and the player input maps
+  left to +1 and right to -1. Flip both together or the wheel will turn
+  against the key press.
+- Crossing a red or yellow light is a penalty: the driver emits
+  `redlight`, and `main.js` adds 10 seconds to the ride time. Detection
+  compares `prevProgress` with the light's `s` inside `driver.update()`.
 - The bus follows a route by projecting its position onto the route path and
   tracking `progress` (metres along the route).
 - Buildings are solid: `hitsBuilding()` uses a spatial grid of exact building

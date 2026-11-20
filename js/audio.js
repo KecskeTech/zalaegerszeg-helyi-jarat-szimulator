@@ -71,7 +71,7 @@ export class BusAudio {
     this.windGain.gain.value = 0;
     const windHp = ctx.createBiquadFilter();
     windHp.type = "highpass";
-    windHp.frequency.value = 1800;
+    windHp.frequency.value = 1200;
     noise().connect(windHp);
     windHp.connect(this.windGain).connect(this.master);
 
@@ -183,15 +183,17 @@ export class BusAudio {
     avasBp.connect(avasNg);
     avasNg.connect(this.avasGain);
 
-    // --- cabin rattle above ~40 km/h -----------------------------------
+    // --- bus body rattle above ~30 km/h -------------------------------
+    // Nem magas sistergés: a karosszéria mély, zötykölődő zaja.
     this.rattleGain = ctx.createGain();
     this.rattleGain.gain.value = 0;
     const rattleBp = ctx.createBiquadFilter();
     rattleBp.type = "bandpass";
-    rattleBp.frequency.value = 2400;
-    rattleBp.Q.value = 0.7;
+    rattleBp.frequency.value = 150;
+    rattleBp.Q.value = 0.8;
     noise().connect(rattleBp);
     rattleBp.connect(this.rattleGain).connect(this.master);
+    this.shakeIn = 0.8;
   }
 
   setEnabled(on) {
@@ -207,7 +209,7 @@ export class BusAudio {
 
     this.rumbleGain.gain.setTargetAtTime(active ? Math.min(0.12, v * 0.009) : 0, t, 0.22);
     this.treadGain.gain.setTargetAtTime(active ? Math.min(0.045, v * 0.004) : 0, t, 0.22);
-    this.windGain.gain.setTargetAtTime(active ? Math.min(0.055, v * v * 0.00028) : 0, t, 0.3);
+    this.windGain.gain.setTargetAtTime(active ? Math.min(0.032, v * v * 0.00018) : 0, t, 0.3);
 
     // Motor pitch tracks RPM. At standstill there is only a faint idle hum.
     const fMotor = 32 + v * 24;
@@ -234,15 +236,20 @@ export class BusAudio {
     this.avas2.frequency.setTargetAtTime(300 + v * 18, t, 0.2);
     this.avas3.frequency.setTargetAtTime(450 + v * 27, t, 0.2);
 
-    // Rattle / creak above 11 m/s (about 40 km/h).
-    const rattle = active ? Math.max(0, Math.min(1, (v - 11) / 7)) : 0;
-    const jitter = rattle * (0.01 + Math.random() * 0.016);
-    this.rattleGain.gain.setTargetAtTime(jitter, t, 0.05);
-    if (rattle > 0.25) {
+    // Karosszéria-zötykölődés 30 km/h felett: mély zörej + ritka ütések.
+    const rattle = active ? Math.max(0, Math.min(1, (v - 8) / 12)) : 0;
+    const jitter = rattle * (0.004 + Math.random() * 0.008);
+    this.rattleGain.gain.setTargetAtTime(jitter, t, 0.08);
+    if (rattle > 0.15) {
+      this.shakeIn -= dt;
+      if (this.shakeIn <= 0) {
+        this.shakeIn = 0.5 + Math.random() * 1.7;
+        this.thud(0.012 + rattle * 0.03);
+      }
       this.creakIn -= dt;
       if (this.creakIn <= 0) {
-        this.creakIn = 0.5 + Math.random() * 2.2;
-        this.creak(0.015 + rattle * 0.04);
+        this.creakIn = 0.35 + Math.random() * 1.5;
+        this.creak(0.01 + rattle * 0.035);
       }
     }
   }
@@ -267,7 +274,7 @@ export class BusAudio {
     src.stop(t0 + 0.5);
   }
 
-  thud() {
+  thud(vol = 0.09) {
     if (!this.ctx || !this.enabled) return;
     const ctx = this.ctx;
     const t0 = ctx.currentTime;
@@ -277,7 +284,7 @@ export class BusAudio {
     o.frequency.exponentialRampToValueAtTime(45, t0 + 0.22);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.09, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
     o.connect(g);
     g.connect(this.master);
