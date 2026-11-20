@@ -330,7 +330,7 @@ driver.onEvent = (type, stop) => {
     audio.thud();
     bumpT = 0.45;
   } else if (type === "redlight") {
-    if (Math.random() < 0.25) {
+    if (Math.random() < 0.5) {
       requestHostCrash();
     } else {
       elapsed += 10;
