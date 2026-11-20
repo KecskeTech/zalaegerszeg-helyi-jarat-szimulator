@@ -1,6 +1,6 @@
 ﻿import * as THREE from "three";
 import { CITY } from "./data/zalaegerszeg.js";
-import { buildCity } from "./city.js";
+import { buildCity, terrainHeight } from "./city.js";
 import { createBus, createCockpit } from "./bus.js";
 import { Driver } from "./driver.js";
 import { TrafficLights } from "./traffic.js";
@@ -348,6 +348,7 @@ function updateCamera(dt, snap = false) {
   const h = driver.heading;
   const fx = Math.sin(h),
     fz = Math.cos(h);
+  const gy = route ? terrainHeight(driver.x, driver.z) : 0;
   if (!route) {
     // kezdőképernyő: lassú keringés a város felett
     const t = performance.now() * 0.00004;
@@ -365,8 +366,8 @@ function updateCamera(dt, snap = false) {
       rightZ = fx;
     const px = driver.x + fx * 4.15 - rightX * 0.72;
     const pz = driver.z + fz * 4.15 - rightZ * 0.72;
-    camera.position.set(px, 2.44, pz);
-    camera.lookAt(px + fx * 40, 1.95, pz + fz * 40);
+    camera.position.set(px, gy + 2.44, pz);
+    camera.lookAt(px + fx * 40, gy + 1.95, pz + fz * 40);
     // apró dőlés
     camera.rotateZ(-driver.yawRate * 0.02);
     return;
@@ -377,10 +378,11 @@ function updateCamera(dt, snap = false) {
   const ang = h + Math.PI + orbitYaw;
   tmpPos.set(
     driver.x + Math.sin(ang) * dist * Math.cos(el),
-    1.4 + dist * Math.sin(el),
+    gy + 1.4 + dist * Math.sin(el),
     driver.z + Math.cos(ang) * dist * Math.cos(el)
   );
-  tmpTarget.set(driver.x + fx * 5.5, 2.1, driver.z + fz * 5.5);
+  tmpPos.y = Math.max(tmpPos.y, terrainHeight(tmpPos.x, tmpPos.z) + 1.2);
+  tmpTarget.set(driver.x + fx * 5.5, gy + 2.1, driver.z + fz * 5.5);
   const k = snap ? 1 : 1 - Math.exp(-dt * 5.5);
   camPos.lerp(tmpPos, k);
   camTarget.lerp(tmpTarget, k);
@@ -399,7 +401,7 @@ function frame() {
   if (route && rideStarted) {
     elapsed += dt;
     const throttle = isDown("w", "arrowup") ? 1 : isDown("s", "arrowdown") ? -1 : 0;
-    const steer = isDown("a", "arrowleft") ? -1 : isDown("d", "arrowright") ? 1 : 0;
+    const steer = isDown("a", "arrowleft") ? 1 : isDown("d", "arrowright") ? -1 : 0;
     const input = { throttle, steer, brake: isDown(" ") };
     const st = driver.update(dt, input, auto, traffic);
 
@@ -421,10 +423,17 @@ function frame() {
     }
     bumpT = Math.max(0, bumpT - dt);
     const bump = bumpT > 0 ? Math.sin((bumpT / 0.45) * Math.PI) * 0.07 : 0;
-    bus.position.set(st.x, 0.06 + bump, st.z);
+    const groundY = terrainHeight(st.x, st.z);
+    bus.position.set(st.x, groundY + 0.09 + bump, st.z);
     const pitch = Math.max(-0.035, Math.min(0.035, -st.accel * 0.004));
     const roll = Math.max(-0.045, Math.min(0.045, -st.yawRate * st.speed * 0.012));
-    bus.rotation.set(pitch, st.heading, roll);
+    const hf = Math.sin(st.heading),
+      hb = Math.cos(st.heading);
+    const slope = -Math.atan2(
+      terrainHeight(st.x + hf * 4, st.z + hb * 4) - terrainHeight(st.x - hf * 4, st.z - hb * 4),
+      8
+    );
+    bus.rotation.set(pitch + Math.max(-0.14, Math.min(0.14, slope)), st.heading, roll);
     bus.userData.setDoors(st.doorOpen);
     const spin = (st.speed * dt) / 0.54;
     for (const w of bus.userData.wheels) w.rotation.x += spin;

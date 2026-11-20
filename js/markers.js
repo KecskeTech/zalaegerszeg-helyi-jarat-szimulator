@@ -1,4 +1,5 @@
 ﻿import * as THREE from "three";
+import { terrainHeight } from "./city.js";
 
 function stopSignTexture() {
   const c = document.createElement("canvas");
@@ -55,9 +56,10 @@ export class RouteMarkers {
       const l = Math.hypot(dx, dz) || 1;
       const nx = (-dz / l) * 0.17,
         nz = (dx / l) * 0.17;
-      const y = 0.072;
-      pos.push(ax + nx, y, az + nz, bx + nx, y, bz + nz, bx - nx, y, bz - nz);
-      pos.push(ax + nx, y, az + nz, bx - nx, y, bz - nz, ax - nx, y, az - nz);
+      const ya = terrainHeight(ax, az) + 0.072;
+      const yb = terrainHeight(bx, bz) + 0.072;
+      pos.push(ax + nx, ya, az + nz, bx + nx, yb, bz + nz, bx - nx, yb, bz - nz);
+      pos.push(ax + nx, ya, az + nz, bx - nx, yb, bz - nz, ax - nx, ya, az - nz);
       for (let k = 0; k < 6; k++) col.push(color.r, color.g, color.b);
     }
     const lineGeo = new THREE.BufferGeometry();
@@ -104,13 +106,21 @@ export class RouteMarkers {
       bayGeo.rotateX(-Math.PI / 2);
       const bay = new THREE.Mesh(bayGeo, bayMat);
       bay.rotation.y = Math.atan2(fx, fz);
-      bay.position.set(s.x + rx * 2.9, 0.068, s.z + rz * 2.9);
+      bay.position.set(
+        s.x + rx * 2.9,
+        terrainHeight(s.x + rx * 2.9, s.z + rz * 2.9) + 0.068,
+        s.z + rz * 2.9
+      );
       bay.renderOrder = 4;
       this.group.add(bay);
 
       // tábla
       const g = new THREE.Group();
-      g.position.set(s.x + rx * 5.2, 0, s.z + rz * 5.2);
+      g.position.set(
+        s.x + rx * 5.2,
+        terrainHeight(s.x + rx * 5.2, s.z + rz * 5.2),
+        s.z + rz * 5.2
+      );
       g.rotation.y = Math.atan2(-fx, -fz);
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 2.5, 8), poleMat);
       pole.position.y = 1.25;

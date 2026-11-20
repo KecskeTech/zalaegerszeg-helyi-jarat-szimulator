@@ -306,8 +306,9 @@ export class Driver {
     }
 
     // --- fizika ---
-    const MAXF = 16.6,
-      MAXR = -4.2;
+    // Nincs sebességplafon: a motor ereje és a menetellenállás szabja meg
+    // a végsebességet (kb. 75-80 km/h), nem egy kemény clamp.
+    const MAXR = -4.2;
     // Rövid effektív tengelytáv + nagy lassú kormányszög = szűk fordulókör.
     const WHEELBASE = 7.0;
     const steerLim = Math.max(0.18, 0.62 - Math.abs(this.speed) * 0.028);
@@ -320,7 +321,7 @@ export class Driver {
       this.speed -= Math.sign(this.speed || 1) * 7.5 * dt;
       if (Math.abs(this.speed) < 0.15) this.speed = 0;
     } else if (throttle > 0.01) {
-      this.speed += 2.1 * throttle * dt;
+      this.speed += 2.75 * throttle * dt;
     } else if (throttle < -0.01) {
       if (this.speed > 0.4) this.speed -= 4.6 * Math.abs(throttle) * dt;
       else this.speed += 1.5 * throttle * dt;
@@ -329,7 +330,7 @@ export class Driver {
     this.speed -= this.speed * 0.11 * dt;
     if (this.speed > 0) this.speed = Math.max(0, this.speed - 0.35 * dt);
     if (this.speed < 0) this.speed = Math.min(0, this.speed + 0.35 * dt);
-    this.speed = clamp(this.speed, MAXR, MAXF);
+    this.speed = Math.max(MAXR, this.speed);
     // Fű: csak lassít, nem ütközés.
     if (this.onGrass(this.x, this.z)) {
       this.speed *= Math.max(0, 1 - dt * 0.8);

@@ -1,4 +1,5 @@
 ﻿import * as THREE from "three";
+import { terrainHeight } from "./city.js";
 
 // Kátyúk az útvonalon: sötét foltok az aszfalton + rázkódás áthaladáskor.
 export class Potholes {
@@ -45,7 +46,7 @@ export class Potholes {
       const x = route.path[idx][0] + rx * off;
       const z = route.path[idx][1] + rz * off;
       const m = new THREE.Mesh(geos[(rnd() * geos.length) | 0], mat);
-      m.position.set(x, 0.079, z);
+      m.position.set(x, terrainHeight(x, z) + 0.079, z);
       m.rotation.y = rnd() * Math.PI * 2;
       m.scale.set(0.8 + rnd() * 0.7, 1, 0.7 + rnd() * 0.6);
       this.group.add(m);

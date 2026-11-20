@@ -54,3 +54,8 @@ Do not move the camera elsewhere.
 - 3D grass is a single `InstancedMesh` of small blade triangles (`createGrass`
   in `city.js`). It is cosmetic only and must never be added to collision
   checks. Keep the instance cap in mind when increasing density.
+- Terrain is a smooth height field: `terrainHeight(x, z)` in `city.js` drives
+  the ground mesh vertices, road/walkway ribbons, area polygons, building
+  bases, trees, grass and the bus. Every ground-placed object must sample it,
+  or it will float or sink on a slope. Keep the field low-frequency; sharp
+  changes break the flat building bases and road quads.

@@ -1,4 +1,5 @@
 ﻿import * as THREE from "three";
+import { terrainHeight } from "./city.js";
 
 const SHIRTS = [0x2f6f9e, 0xb5493f, 0x4d7a4a, 0x8767a5, 0xd0a03a, 0x3c4650, 0xc2c7cc, 0x8a4f35];
 const PANTS = [0x2c3440, 0x3a3f46, 0x514842, 0x27364a];
@@ -130,7 +131,7 @@ export class Passengers {
         const x = stop.x + rx * out + fx * along;
         const z = stop.z + rz * out + fz * along;
         const person = makePerson(this.rnd, false);
-        person.position.set(x, 0, z);
+        person.position.set(x, terrainHeight(x, z), z);
         person.rotation.y = Math.atan2(-rx, -rz) + (this.rnd() - 0.5) * 0.6;
         this.group.add(person);
         arr.push({ group: person, x, z, walking: false, target: null, speed: 2.3 });
@@ -177,7 +178,7 @@ export class Passengers {
       const person = makePerson(this.rnd, false);
       const x = busState.x + fx * 3.3 + rx * 1.35;
       const z = busState.z + fz * 3.3 + rz * 1.35;
-      person.position.set(x, 0, z);
+      person.position.set(x, terrainHeight(x, z), z);
       this.group.add(person);
       const tx = x + rx * (5 + this.rnd() * 3) + fx * (this.rnd() - 0.5) * 4;
       const tz = z + rz * (5 + this.rnd() * 3) + fz * (this.rnd() - 0.5) * 4;
@@ -224,7 +225,11 @@ export class Passengers {
       const v = Math.min(w.speed, d) * dt;
       w.x += (dx / d) * v;
       w.z += (dz / d) * v;
-      w.group.position.set(w.x, Math.abs(Math.sin((w.life += dt) * 9)) * 0.045, w.z);
+      w.group.position.set(
+        w.x,
+        terrainHeight(w.x, w.z) + Math.abs(Math.sin((w.life += dt) * 9)) * 0.045,
+        w.z
+      );
       w.group.rotation.y = Math.atan2(dx, dz);
     }
     // a várakozók kicsit mozognak
@@ -232,7 +237,9 @@ export class Passengers {
     for (const arr of this.waiting.values()) {
       for (let i = 0; i < arr.length; i++) {
         const p = arr[i];
-        p.group.position.y = Math.sin(t * 1.4 + i * 1.7) * 0.012;
+        p.group.position.y =
+          terrainHeight(p.group.position.x, p.group.position.z) +
+          Math.sin(t * 1.4 + i * 1.7) * 0.012;
       }
     }
   }

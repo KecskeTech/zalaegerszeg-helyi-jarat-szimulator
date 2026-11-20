@@ -137,6 +137,17 @@ class Builder {
 
 const scaleColor = (c, f) => [c[0] * f, c[1] * f, c[2] * f];
 
+// Domborzati magasság (méter). Lassú, sima hullámok: az utak és az
+// épületek ehhez igazodnak, ezért nem lehet éles.
+export function terrainHeight(x, z) {
+  return (
+    Math.sin(x * 0.00115 + 1.7) * Math.cos(z * 0.00094 - 0.6) * 8.5 +
+    Math.sin((x * 0.6 + z * 0.8) * 0.00061 + 2.2) * 5.0 +
+    Math.sin(x * 0.0037) * Math.sin(z * 0.0031) * 0.7
+  );
+}
+
+
 // miteres szalag: nincs önátfedés a töréspontoknál
 function ribbon(builder, flat, width, y, color) {
   const hw = width / 2;
@@ -179,11 +190,13 @@ function ribbon(builder, flat, width, y, color) {
   for (let i = 0; i < n - 1; i++) {
     const a = offs[i],
       b = offs[i + 1];
+    const ya = terrainHeight((a[0] + a[2]) / 2, (a[1] + a[3]) / 2) + y;
+    const yb = terrainHeight((b[0] + b[2]) / 2, (b[1] + b[3]) / 2) + y;
     builder.quad(
-      [a[0], y, a[1]],
-      [b[0], y, b[1]],
-      [b[2], y, b[3]],
-      [a[2], y, a[3]],
+      [a[0], ya, a[1]],
+      [b[0], yb, b[1]],
+      [b[2], yb, b[3]],
+      [a[2], ya, a[3]],
       color
     );
   }
@@ -204,9 +217,9 @@ function addFlatPolygon(builder, flat, y, color) {
   const pos = geom.toNonIndexed().getAttribute("position");
   for (let i = 0; i < pos.count; i += 3) {
     builder.tri(
-      [pos.getX(i), y, pos.getZ(i)],
-      [pos.getX(i + 1), y, pos.getZ(i + 1)],
-      [pos.getX(i + 2), y, pos.getZ(i + 2)],
+      [pos.getX(i), terrainHeight(pos.getX(i), pos.getZ(i)) + y, pos.getZ(i)],
+      [pos.getX(i + 1), terrainHeight(pos.getX(i + 1), pos.getZ(i + 1)) + y, pos.getZ(i + 1)],
+      [pos.getX(i + 2), terrainHeight(pos.getX(i + 2), pos.getZ(i + 2)) + y, pos.getZ(i + 2)],
       color
     );
   }
@@ -221,6 +234,7 @@ function addBuilding(wallB, roofB, plinthB, flat, height, colorIdx) {
   const brightness = 0.88 + hash01(colorIdx * 3 + n) * 0.18;
   const cx = flat[0];
   const cz = flat[1];
+  const base = terrainHeight(cx, cz);
   for (let i = 0; i < n; i++) {
     const ax = flat[i * 2],
       az = flat[i * 2 + 1];
@@ -236,10 +250,10 @@ function addBuilding(wallB, roofB, plinthB, flat, height, colorIdx) {
     const u1 = len / 2.9;
     const v1 = height / 3.15;
     wallB.quad(
-      [ax, 0, az],
-      [bx, 0, bz],
-      [bx, height, bz],
-      [ax, height, az],
+      [ax, base, az],
+      [bx, base, bz],
+      [bx, base + height, bz],
+      [ax, base + height, az],
       c,
       [0, 0],
       [u1, 0],
@@ -252,10 +266,10 @@ function addBuilding(wallB, roofB, plinthB, flat, height, colorIdx) {
     const oz = (dx / len) * 0.08 * sign;
     const plinthCol = scaleColor(wall, shade * 0.62);
     plinthB.quad(
-      [ax + ox, 0, az + oz],
-      [bx + ox, 0, bz + oz],
-      [bx + ox, YM, bz + oz],
-      [ax + ox, YM, az + oz],
+      [ax + ox, base, az + oz],
+      [bx + ox, base, bz + oz],
+      [bx + ox, base + YM, bz + oz],
+      [ax + ox, base + YM, az + oz],
       plinthCol
     );
   }
@@ -265,9 +279,9 @@ function addBuilding(wallB, roofB, plinthB, flat, height, colorIdx) {
     const pos = geom.toNonIndexed().getAttribute("position");
     for (let i = 0; i < pos.count; i += 3) {
       roofB.tri(
-        [pos.getX(i), height, pos.getZ(i)],
-        [pos.getX(i + 1), height, pos.getZ(i + 1)],
-        [pos.getX(i + 2), height, pos.getZ(i + 2)],
+        [pos.getX(i), base + height, pos.getZ(i)],
+        [pos.getX(i + 1), base + height, pos.getZ(i + 1)],
+        [pos.getX(i + 2), base + height, pos.getZ(i + 2)],
         roof
       );
     }
@@ -437,9 +451,9 @@ function createTrees(scene, CITY) {
     const sc = 0.7 + rnd() * 0.7;
     scale.set(sc, sc, sc);
     q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rnd() * Math.PI * 2);
-    m.compose(new THREE.Vector3(x, 1.1 * sc, z), q, scale);
+    m.compose(new THREE.Vector3(x, terrainHeight(x, z) + 1.1 * sc, z), q, scale);
     trunks.setMatrixAt(i, m);
-    m.compose(new THREE.Vector3(x, 4.6 * sc, z), q, scale);
+    m.compose(new THREE.Vector3(x, terrainHeight(x, z) + 4.6 * sc, z), q, scale);
     leaves.setMatrixAt(i, m);
     col.setHSL(0.24 + rnd() * 0.06, 0.32 + rnd() * 0.15, 0.28 + rnd() * 0.1);
     leaves.setColorAt(i, col);
@@ -603,7 +617,7 @@ function createGrass(scene, CITY) {
     const sc = 0.7 + rnd() * 0.8;
     scale.set(sc, 0.8 + rnd() * 0.5, sc);
     q.setFromAxisAngle(up, rnd() * Math.PI * 2);
-    m.compose(new THREE.Vector3(x, 0.02, z), q, scale);
+    m.compose(new THREE.Vector3(x, terrainHeight(x, z) + 0.02, z), q, scale);
     grass.setMatrixAt(i, m);
     col.setHSL(0.22 + rnd() * 0.07, 0.5 + rnd() * 0.22, 0.3 + rnd() * 0.16);
     grass.setColorAt(i, col);
@@ -635,9 +649,16 @@ export function buildCity(scene, CITY) {
 
   makeSky(scene);
 
-  // talaj
-  const groundGeo = new THREE.PlaneGeometry(16000, 16000);
+  // talaj: domborzati magassággal
+  const groundGeo = new THREE.PlaneGeometry(16000, 16000, 256, 256);
   groundGeo.rotateX(-Math.PI / 2);
+  {
+    const pos = groundGeo.getAttribute("position");
+    for (let i = 0; i < pos.count; i++) {
+      pos.setY(i, terrainHeight(pos.getX(i), pos.getZ(i)));
+    }
+    groundGeo.computeVertexNormals();
+  }
   const ground = new THREE.Mesh(
     groundGeo,
     new THREE.MeshLambertMaterial({ map: grassTexture() })

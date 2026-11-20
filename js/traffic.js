@@ -1,4 +1,5 @@
 ﻿import * as THREE from "three";
+import { terrainHeight } from "./city.js";
 
 const LAMP_OFF = { red: 0x3a0b0b, yellow: 0x3a2a06, green: 0x0b3220 };
 const LAMP_ON = { red: 0xff2b2b, yellow: 0xffc32b, green: 0x2bff7a };
@@ -55,11 +56,15 @@ export class TrafficLights {
       fx /= fl;
       fz /= fl;
       const yaw = Math.atan2(-fx, -fz);
-      // a lámpa a menetirány szerinti jobb oldalon áll, nem az úttesten
-      const rightX = fz,
-        rightZ = -fx;
+      // jobb oldali oszlop, a kar az úttest fölé nyúlik
+      const rightX = -fz,
+        rightZ = fx;
       const g = new THREE.Group();
-      g.position.set(l.x + rightX * 5.6, 0, l.z + rightZ * 5.6);
+      g.position.set(
+        l.x + rightX * 5.6,
+        terrainHeight(l.x + rightX * 5.6, l.z + rightZ * 5.6),
+        l.z + rightZ * 5.6
+      );
       g.rotation.y = yaw;
 
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 4.1, 8), this.poleMat);
@@ -112,7 +117,7 @@ export class TrafficLights {
         new THREE.MeshBasicMaterial({ color: 0xdedbd2, transparent: true, opacity: 0.92 })
       );
       stopLine.rotation.y = Math.atan2(fx, fz);
-      stopLine.position.set(l.x - fx * 2.5, 0.075, l.z - fz * 2.5);
+      stopLine.position.set(l.x - fx * 2.5, terrainHeight(l.x, l.z) + 0.085, l.z - fz * 2.5);
       this.group.add(stopLine);
 
       this.group.add(g);

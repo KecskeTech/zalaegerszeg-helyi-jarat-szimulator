@@ -205,8 +205,8 @@ export class BusAudio {
     const t = this.ctx.currentTime;
     const road = Math.min(1, v / 14);
 
-    this.rumbleGain.gain.setTargetAtTime(active ? Math.min(0.2, v * 0.015) : 0, t, 0.22);
-    this.treadGain.gain.setTargetAtTime(active ? Math.min(0.06, v * 0.0055) : 0, t, 0.22);
+    this.rumbleGain.gain.setTargetAtTime(active ? Math.min(0.12, v * 0.009) : 0, t, 0.22);
+    this.treadGain.gain.setTargetAtTime(active ? Math.min(0.045, v * 0.004) : 0, t, 0.22);
     this.windGain.gain.setTargetAtTime(active ? Math.min(0.055, v * v * 0.00028) : 0, t, 0.3);
 
     // Motor pitch tracks RPM. At standstill there is only a faint idle hum.
