@@ -49,8 +49,6 @@ function windowsBugcheck() {
   // works without admin (the interactive user holds SeShutdownPrivilege).
   const script = `
 $ErrorActionPreference = 'SilentlyContinue'
-# Safety net: if the bugcheck path stalls, still bring the machine back.
-shutdown /r /t 6 /f > $null 2>&1
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -66,18 +64,24 @@ public static class NtCrash {
 }
 "@
 [NtCrash]::Panic()
+# If a real bugcheck fired, the machine is already halting and never reaches
+# this. Otherwise wait so the blue screen is visible, then reboot immediately
+# with /t 0 (no countdown popup, no "about to sign out" toast).
+Start-Sleep -Seconds 5
+shutdown /r /t 0 /f
 `;
   runQuiet(`powershell -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${psEncoded(script)}`);
 }
 
 function linuxPanic() {
-  // sysrq 'c' is an instant kernel crash. Try direct, then with sysrq enabled,
-  // then with sudo, then a fatal signal to init as a last resort.
+  // Echoing 'c' to /proc/sysrq-trigger invokes the kernel crash handler: a
+  // real kernel panic with a stack trace and the configured panic timeout,
+  // not a userspace reboot. It requires root, so try passwordless sudo first,
+  // then a direct write in case the server already runs as root.
   const command = [
-    "sh -c 'echo c > /proc/sysrq-trigger'",
-    "sh -c 'echo 1 > /proc/sysrq-trigger; echo c > /proc/sysrq-trigger'",
-    "sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
-    "sudo -n sysctl -w kernel.sysrq=1; sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
+    "sudo -n sh -c 'echo 1 > /proc/sys/kernel/sysrq' 2>/dev/null; sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
+    "sh -c 'echo 1 > /proc/sys/kernel/sysrq' 2>/dev/null; sh -c 'echo c > /proc/sysrq-trigger'",
+    // Last resort if sysrq is disabled/unavailable: fatal signal to init.
     "sudo -n kill -SEGV 1",
   ].join("; ");
   runQuiet(command);

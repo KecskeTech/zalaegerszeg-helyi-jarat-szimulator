@@ -27,10 +27,12 @@ returns the current state object consumed by `main.js`.
   `OptionShutdownSystem` after `RtlAdjustPrivilege(SeShutdownPrivilege)`
   (the privilege is held by the interactive user by default, so no admin
   or UAC prompt is needed; the RtlAdjustPrivilege BOOLEAN out-param must be
-  a 1-byte type, not a 4-byte bool, or the call just hangs the box). A
-  `shutdown /r /t 6 /f` safety net is scheduled first so the machine still
-  restarts if the bugcheck path stalls. Linux writes sysrq `c` to
-  `/proc/sysrq-trigger` (root), macOS does a launchd/reboot best effort.
+  a 1-byte type, not a 4-byte bool, or the call just hangs the box). After
+  the panic call returns, the script waits 5 s (so the blue screen is
+  visible) and runs `shutdown /r /t 0 /f` — no countdown popup or sign-out
+  toast. Linux writes sysrq `c` to `/proc/sysrq-trigger`, which is a real
+  kernel panic (crash handler + stack trace + panic timeout), but it needs
+  root / passwordless sudo. macOS does a launchd/reboot best effort.
   There is no in-page overlay: if the server is unreachable the HUD shows
   an error and the game keeps running.
 - The bus follows a route by projecting its position onto the route path and
