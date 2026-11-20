@@ -714,3 +714,21 @@ button {
     padding: 32px 18px 32px;
   }
 }
+
+/* --- crash sequence: video -> wav -> host bugcheck --- */
+#crash-seq {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+#crash-seq.hidden { display: none; }
+#crash-seq video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}

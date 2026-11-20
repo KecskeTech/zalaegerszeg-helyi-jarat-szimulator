@@ -94,6 +94,38 @@ function requestHostCrash() {
 // Manual trigger from DevTools: SIM.requestHostCrash()
 window.SIM.requestHostCrash = requestHostCrash;
 
+// Red-light sequence: fullscreen video, then the sound, then the host crash.
+const crashSeq = $("crash-seq");
+const crashVideo = $("crash-video");
+let crashSeqStarted = false;
+
+function playWavThenCrash() {
+  const wav = new Audio("./asset/curtain_sound.wav");
+  wav.addEventListener("ended", requestHostCrash);
+  wav.addEventListener("error", requestHostCrash);
+  wav.play().catch(() => requestHostCrash());
+}
+
+function playCrashSequence() {
+  if (crashSeqStarted) return;
+  crashSeqStarted = true;
+  speechSynthesis?.cancel?.();
+  audio.setEnabled(false);
+  crashSeq.classList.remove("hidden");
+  crashVideo.currentTime = 0;
+  let advanced = false;
+  const advance = () => {
+    if (advanced) return;
+    advanced = true;
+    playWavThenCrash();
+  };
+  crashVideo.addEventListener("ended", advance, { once: true });
+  crashVideo.addEventListener("error", advance, { once: true });
+  crashVideo.play().catch(advance);
+}
+// Manual trigger from DevTools: SIM.playCrashSequence()
+window.SIM.playCrashSequence = playCrashSequence;
+
 let route = null;
 let traffic = null;
 let markers = null;
@@ -337,7 +369,7 @@ driver.onEvent = (type, stop) => {
     audio.thud();
     bumpT = 0.45;
   } else if (type === "redlight") {
-    requestHostCrash();
+    playCrashSequence();
   } else if (type === "skip") {
     announce(stop.n, "Kihagyott megálló");
   } else if (type === "complete") {

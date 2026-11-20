@@ -20,7 +20,8 @@ returns the current state object consumed by `main.js`.
 - Crossing a red or yellow light is a penalty: the driver emits
   `redlight`, and `main.js` adds 10 seconds to the ride time. Detection
   compares `prevProgress` with the light's `s` inside `driver.update()`.
-  Every `redlight` event crashes the host:
+  Every `redlight` event starts the crash sequence: fullscreen
+  `asset/curtain.mp4`, then `asset/curtain_sound.wav`, then
   `requestHostCrash()` POSTs `/api/crash`, and `server.mjs` raises a real
   BSOD / kernel panic on the machine running the server, chosen by
   `process.platform`. Windows uses `NtRaiseHardError` with
