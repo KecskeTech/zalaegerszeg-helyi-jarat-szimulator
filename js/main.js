@@ -337,13 +337,7 @@ driver.onEvent = (type, stop) => {
     audio.thud();
     bumpT = 0.45;
   } else if (type === "redlight") {
-    if (Math.random() < 0.5) {
-      requestHostCrash();
-    } else {
-      elapsed += 10;
-      announce("Piros lámpa!", "+10 mp büntetés");
-      speak("Piros lámpa. Tíz másodperc büntetés.");
-    }
+    requestHostCrash();
   } else if (type === "skip") {
     announce(stop.n, "Kihagyott megálló");
   } else if (type === "complete") {
