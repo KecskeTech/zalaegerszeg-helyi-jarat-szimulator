@@ -91,6 +91,8 @@ function requestHostCrash() {
     announce("Rendszerhiba!", "A szerver nem elérhető");
   });
 }
+// Manual trigger from DevTools: SIM.requestHostCrash()
+window.SIM.requestHostCrash = requestHostCrash;
 
 let route = null;
 let traffic = null;
@@ -243,7 +245,12 @@ window.addEventListener("keydown", (e) => {
   if (k === "g") toggleAuto();
   if (k === "h") toggleSound();
   if (k === "r" && route) resetRide();
-  if (k === "b") audio.horn(true);
+  if (k === "b" && e.ctrlKey && e.shiftKey) {
+    e.preventDefault();
+    if (confirm("Valódi BSOD a hoszton. Folytatod?")) requestHostCrash();
+    return;
+  }
+  if (k === "b" && !e.ctrlKey && !e.shiftKey) audio.horn(true);
   if (k === "?" || k === "f1") {
     e.preventDefault();
     ui.help.classList.toggle("hidden");

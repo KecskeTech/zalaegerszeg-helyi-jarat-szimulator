@@ -113,3 +113,22 @@ Use `setTargetAtTime` for smooth gain and frequency changes. One-shot effects
   dwelling.
 - `Potholes` places dark patches along the route and returns a hit when the bus
   passes close enough; `main.js` then plays a thud and applies a camera shake.
+
+## Testing the host crash safely
+
+The crash path can be triggered by hand, no need to wait for the 50% roll:
+
+1. Dry run (no crash). Start the server with the gate on and hit the endpoint:
+
+   ```powershell
+   $env:CRASH_DRY_RUN=1; node server.mjs
+   curl.exe -X POST http://127.0.0.1:8123/api/crash
+   ```
+
+   The response is `{"action":"dry-run","dryRun":true,...}` and the console
+   prints `[crash] dry-run: would bugcheck this win32 host`. No state changes.
+
+2. Manual trigger, real. In the running game press **Ctrl+Shift+B** and
+   confirm, or from DevTools run `SIM.requestHostCrash()`. Both POST
+   `/api/crash`, which raises the panic on the host after 200 ms. Save work
+   first: a bugcheck loses unsaved buffers.

@@ -102,11 +102,25 @@ const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
 
   if (urlPath === "/api/crash" && (req.method === "POST" || req.method === "GET")) {
+    // CRASH_DRY_RUN=1 exercises the endpoint and platform dispatch without
+    // actually bugchecking the host. Use it to test the wiring safely.
+    const dryRun = process.env.CRASH_DRY_RUN === "1";
     res.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-cache",
     });
-    res.end(JSON.stringify({ ok: true, platform: process.platform, action: "crash" }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        platform: process.platform,
+        action: dryRun ? "dry-run" : "crash",
+        dryRun,
+      })
+    );
+    if (dryRun) {
+      console.log(`[crash] dry-run: would bugcheck this ${process.platform} host (no action taken)`);
+      return;
+    }
     // Answer first so the browser is not left hanging, then crash the host.
     setTimeout(triggerHostPanic, 200);
     return;
