@@ -399,7 +399,7 @@ function frame() {
   if (route && rideStarted) {
     elapsed += dt;
     const throttle = isDown("w", "arrowup") ? 1 : isDown("s", "arrowdown") ? -1 : 0;
-    const steer = isDown("a", "arrowleft") ? 1 : isDown("d", "arrowright") ? -1 : 0;
+    const steer = isDown("a", "arrowleft") ? -1 : isDown("d", "arrowright") ? 1 : 0;
     const input = { throttle, steer, brake: isDown(" ") };
     const st = driver.update(dt, input, auto, traffic);
 

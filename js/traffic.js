@@ -55,10 +55,11 @@ export class TrafficLights {
       fx /= fl;
       fz /= fl;
       const yaw = Math.atan2(-fx, -fz);
-      const rightX = -fz,
-        rightZ = fx;
+      // a lámpa a menetirány szerinti jobb oldalon áll, nem az úttesten
+      const rightX = fz,
+        rightZ = -fx;
       const g = new THREE.Group();
-      g.position.set(l.x + rightX * 5.0, 0, l.z + rightZ * 5.0);
+      g.position.set(l.x + rightX * 5.6, 0, l.z + rightZ * 5.6);
       g.rotation.y = yaw;
 
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 4.1, 8), this.poleMat);
@@ -66,16 +67,16 @@ export class TrafficLights {
       g.add(pole);
 
       const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.11, 0.11), this.poleMat);
-      arm.position.set(-1.2, 3.95, 0);
+      arm.position.set(1.2, 3.95, 0);
       g.add(arm);
 
       // hátlap
       const back = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.5, 0.1), this.poleMat);
-      back.position.set(-2.35, 3.3, -0.03);
+      back.position.set(2.35, 3.3, -0.03);
       g.add(back);
 
       const board = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.42, 0.2), this.headMat);
-      board.position.set(-2.35, 3.3, 0);
+      board.position.set(2.35, 3.3, 0);
       g.add(board);
 
       const lampGeo = new THREE.CircleGeometry(0.155, 16);
@@ -84,7 +85,7 @@ export class TrafficLights {
       order.forEach((k, idx) => {
         const mat = new THREE.MeshBasicMaterial({ color: LAMP_OFF[k] });
         const m = new THREE.Mesh(lampGeo, mat);
-        m.position.set(-2.35, 3.72 - idx * 0.42, 0.11);
+        m.position.set(2.35, 3.72 - idx * 0.42, 0.11);
         g.add(m);
         lamps[k] = mat;
       });
@@ -100,7 +101,7 @@ export class TrafficLights {
         })
       );
       glow.scale.set(1.05, 1.05, 1);
-      glow.position.set(-2.35, 3.72, 0.2);
+      glow.position.set(2.35, 3.72, 0.2);
       g.add(glow);
 
       // stopvonal az úton

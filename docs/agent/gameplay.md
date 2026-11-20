@@ -9,8 +9,12 @@ returns the current state object consumed by `main.js`.
 - Units are metres and seconds; `speed` is m/s. Forward maximum is 16.6 m/s
   (about 60 km/h), reverse maximum -4.2 m/s.
 - Steering is speed-sensitive: the maximum steer angle shrinks with speed.
-  `WHEELBASE = 10.2` and the low-speed steer limit of 0.4 rad give a realistic
-  ~24 m turning circle; do not shrink these values, the bus must feel heavy.
+  `WHEELBASE = 7.0` and the low-speed steer limit of 0.62 rad give a ~10 m
+  turning circle, so the bus can turn at walking pace. The steer rate is also
+  faster at low speed (`maxRate` 2.2 rad/s, down to 0.7 at top speed).
+- The cockpit steering wheel follows `-steer`, and the player input maps
+  left to -1 and right to +1; keep that sign convention or the bus will turn
+  against the key press.
 - The bus follows a route by projecting its position onto the route path and
   tracking `progress` (metres along the route).
 - Buildings are solid: `hitsBuilding()` uses a spatial grid of exact building
@@ -43,9 +47,13 @@ lights and stops.
 ## Traffic lights
 
 `js/traffic.js` builds one light per `route.lights` entry: pole, arm, head and
-stop line. Each light cycles red -> green -> yellow -> red using the
-`GREEN_TIME`, `YELLOW_TIME` and `RED_TIME` constants. `traffic.update()` returns
-the nearest active light within 320 m ahead, including its distance and state.
+stop line. The pole stands 5.6 m to the driver's right of the route centreline
+and the arm/head reach 2.35 m back over the right lane, so the head is not in
+the middle of the roadway. Keep the right vector as `(fz, -fx)`; the opposite
+sign puts the pole in the oncoming lane. Each light cycles red -> green ->
+yellow -> red using the `GREEN_TIME`, `YELLOW_TIME` and `RED_TIME` constants.
+`traffic.update()` returns the nearest active light within 320 m ahead,
+including its distance and state.
 
 Each light runs its own red -> green -> yellow -> red cycle. When the bus is
 stopped at a red light within 26 m, `MIN_RED_WAIT` (4.5 s) is applied once via

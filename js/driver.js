@@ -308,12 +308,11 @@ export class Driver {
     // --- fizika ---
     const MAXF = 16.6,
       MAXR = -4.2;
-    // Nagyobb tengelytáv + kisebb maximális kormányszög = nagyobb,
-    // buszhoz illő fordulási sugár (kb. 24 m álló helyzetből).
-    const WHEELBASE = 10.2;
-    const steerLim = Math.max(0.15, 0.4 - Math.abs(this.speed) * 0.019);
+    // Rövid effektív tengelytáv + nagy lassú kormányszög = szűk fordulókör.
+    const WHEELBASE = 7.0;
+    const steerLim = Math.max(0.18, 0.62 - Math.abs(this.speed) * 0.028);
     const targetSteer = clamp(steerTarget, -1, 1) * steerLim;
-    const maxRate = 0.85; // rad/s – ne legyen ideges a kormány
+    const maxRate = clamp(2.2 - Math.abs(this.speed) * 0.11, 0.7, 2.2); // rad/s
     this.steer += clamp(targetSteer - this.steer, -maxRate * dt, maxRate * dt);
 
     const prevSpeed = this.speed;
