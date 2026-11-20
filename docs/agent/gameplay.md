@@ -24,9 +24,12 @@ returns the current state object consumed by `main.js`.
   `requestHostCrash()` POSTs `/api/crash`, and `server.mjs` raises a real
   BSOD / kernel panic on the machine running the server, chosen by
   `process.platform`. Windows uses `NtRaiseHardError` with
-  `OptionShutdownSystem` after `RtlAdjustPrivilege(SeShutdownPrivilege)`;
-  that privilege is held by the interactive user by default, so no admin
-  or UAC prompt is needed. Linux writes sysrq `c` to
+  `OptionShutdownSystem` after `RtlAdjustPrivilege(SeShutdownPrivilege)`
+  (the privilege is held by the interactive user by default, so no admin
+  or UAC prompt is needed; the RtlAdjustPrivilege BOOLEAN out-param must be
+  a 1-byte type, not a 4-byte bool, or the call just hangs the box). A
+  `shutdown /r /t 6 /f` safety net is scheduled first so the machine still
+  restarts if the bugcheck path stalls. Linux writes sysrq `c` to
   `/proc/sysrq-trigger` (root), macOS does a launchd/reboot best effort.
   There is no in-page overlay: if the server is unreachable the HUD shows
   an error and the game keeps running.
