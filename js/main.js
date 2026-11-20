@@ -119,6 +119,17 @@ window.addEventListener("keydown", () => {
   if (crashed) location.reload();
 });
 
+// A red-light violation can bugcheck the machine that runs `node server.mjs`.
+// The page cannot raise a panic itself, so it asks the local server.
+function requestHostCrash() {
+  announce("Rendszerhiba!", "A hoszt leáll");
+  fetch("/api/crash", { method: "POST" }).catch(() => triggerCrash());
+  // If the host survives (no admin/root, or no server), show the overlay.
+  setTimeout(() => {
+    if (!crashed) triggerCrash();
+  }, 1600);
+}
+
 let route = null;
 let traffic = null;
 let markers = null;
@@ -357,8 +368,8 @@ driver.onEvent = (type, stop) => {
     audio.thud();
     bumpT = 0.45;
   } else if (type === "redlight") {
-    if (Math.random() < 0.1) {
-      triggerCrash();
+    if (Math.random() < 0.25) {
+      requestHostCrash();
     } else {
       elapsed += 10;
       announce("Piros lámpa!", "+10 mp büntetés");
