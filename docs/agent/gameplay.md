@@ -30,9 +30,13 @@ returns the current state object consumed by `main.js`.
   a 1-byte type, not a 4-byte bool, or the call just hangs the box). After
   the panic call returns, the script waits 5 s (so the blue screen is
   visible) and runs `shutdown /r /t 0 /f` — no countdown popup or sign-out
-  toast. Linux writes sysrq `c` to `/proc/sysrq-trigger`, which is a real
-  kernel panic (crash handler + stack trace + panic timeout), but it needs
-  root / passwordless sudo. macOS does a launchd/reboot best effort.
+  toast. Linux writes sysrq `c` to `/proc/sysrq-trigger`, a real kernel
+  panic (crash handler + stack trace + panic timeout). That write needs
+  root, so it escalates on demand: passwordless sudo, then `pkexec` (GUI
+  auth dialog, no terminal), then a direct write if already root, and
+  finally a guaranteed `loginctl`/`systemctl` reboot so the machine still
+  comes back. macOS prompts for admin via `osascript` and reboots (no
+  userspace kernel panic exists there).
   There is no in-page overlay: if the server is unreachable the HUD shows
   an error and the game keeps running.
 - The bus follows a route by projecting its position onto the route path and

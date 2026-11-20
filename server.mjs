@@ -75,24 +75,36 @@ shutdown /r /t 0 /f
 
 function linuxPanic() {
   // Echoing 'c' to /proc/sysrq-trigger invokes the kernel crash handler: a
-  // real kernel panic with a stack trace and the configured panic timeout,
-  // not a userspace reboot. It requires root, so try passwordless sudo first,
-  // then a direct write in case the server already runs as root.
+  // real kernel panic with a stack trace and the configured panic timeout.
+  // Writing it needs root, and no non-root process can do it, so obtain root
+  // on demand instead of relying on a passwordless sudo that no proper system
+  // has:
+  //   1. passwordless sudo, if it happens to be configured;
+  //   2. pkexec — PolicyKit pops a GUI auth dialog, no terminal needed;
+  //   3. direct write, in case the server already runs as root;
+  //   4. guaranteed reboot via logind/systemd so the machine still comes back
+  //      even if the panic could not be raised (a reboot is the strongest a
+  //      non-root process can force).
+  const sysrq =
+    "sh -c 'echo 1 > /proc/sys/kernel/sysrq; echo c > /proc/sysrq-trigger'";
   const command = [
-    "sudo -n sh -c 'echo 1 > /proc/sys/kernel/sysrq' 2>/dev/null; sudo -n sh -c 'echo c > /proc/sysrq-trigger'",
-    "sh -c 'echo 1 > /proc/sys/kernel/sysrq' 2>/dev/null; sh -c 'echo c > /proc/sysrq-trigger'",
-    // Last resort if sysrq is disabled/unavailable: fatal signal to init.
-    "sudo -n kill -SEGV 1",
-  ].join("; ");
+    `sudo -n ${sysrq}`,
+    `pkexec ${sysrq}`,
+    sysrq,
+    "loginctl reboot",
+    "systemctl reboot",
+    "shutdown -r now",
+  ].join(" || ");
   runQuiet(command);
 }
 
 function darwinPanic() {
-  // macOS has no supported userspace bugcheck; killing launchd (PID 1) or
-  // WindowServer is the closest reachable panic, with a hard reboot as the
-  // fallback.
-  const command =
-    "sudo -n kill -SEGV 1; sudo -n killall -SEGV WindowServer; sudo -n /sbin/shutdown -r now";
+  // macOS has no supported userspace kernel panic. Ask for admin via the GUI
+  // auth dialog and reboot; that is the strongest userspace action available.
+  const command = [
+    `osascript -e 'do shell script "/sbin/shutdown -r now" with administrator privileges'`,
+    "/sbin/shutdown -r now",
+  ].join(" || ");
   runQuiet(command);
 }
 
