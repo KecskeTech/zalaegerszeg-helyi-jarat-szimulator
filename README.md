@@ -138,3 +138,6 @@ node tools/build-data.mjs
   not simulated.
 - Traffic lights are scripted per route rather than simulating full junction
   phases.
+
+Have a good time gaming!
+Jó játékot!
